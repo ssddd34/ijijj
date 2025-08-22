@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>六花のOllamaチャットルーム | by dsb</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: rgba(157, 120, 203, 0.7);
+            --secondary: rgba(177, 146, 215, 0.7);
+            --accent: rgba(199, 76, 111, 0.7);
+            --light: rgba(255, 240, 255, 0.9);
+            --dark: rgba(58, 42, 80, 0.7);
+            --success: rgba(124, 207, 133, 0.7);
+            --warning: rgba(230, 182, 86, 0.7);
+            --error: rgba(231, 109, 137, 0.7);
+            --transparent-bg: rgba(93, 74, 126, 0.4);
+            --transparent-border: rgba(138, 109, 174, 0.5);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans JP', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            background: rgba(93, 74, 126, 0.15);
+        }
+        
+        .background-slideshow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+        }
+        
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .slide.active {
+            opacity: 0.4;
+        }
+        
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom right, rgba(157, 120, 203, 0.3), rgba(93, 74, 126, 0.3));
+            z-index: -1;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--transparent-bg);
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+            border: 2px solid var(--transparent-border);
+            backdrop-filter: blur(8px);
+        }
+        
+        .chat-container {
+            width: 100%;
+            height: 100vh;
+            background: var(--transparent-bg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            border: 2px solid var(--transparent-border);
+            display: none;
+            backdrop-filter: blur(8px);
+        }
+        
+        .header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            position: relative;
+            text-align: center;
+            border-bottom: 2px solid var(--accent);
+        }
+        
+        .brand {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 16px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            color: #ffd700;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        .brand i {
+            margin-right: 8px;
+            color: #ffd700;
+        }
+        
+        .character {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 18px;
+            color: #ffd700;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin: 0;
+            padding: 10px 0;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .header p {
+            margin: 5px 0 0;
+            opacity: 0.8;
+            font-size: 14px;
+            color: #f0e6ff;
+        }
+        
+        .config-section {
+            background: rgba(71, 55, 99, 0.4);
+            padding: 20px;
+            border-bottom: 2px solid var(--transparent-border);
+        }
+        
+        .accordion {
+            background: linear-gradient(to right, var(--secondary), var(--accent));
+            color: white;
+            cursor: pointer;
+            padding: 15px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .accordion:hover {
+            background: linear-gradient(to right, rgba(154, 125, 190, 0.8), rgba(215, 92, 127, 0.8));
+        }
+        
+        .accordion.active {
+            background: linear-gradient(to right, rgba(154, 125, 190, 0.8), rgba(215, 92, 127, 0.8));
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        
+        .panel {
+            padding: 0 18px;
+            background-color: rgba(255, 255, 255, 0.15);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .panel-content {
+            padding: 15px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #f0e6ff;
+        }
+        
+        input, select, button, textarea {
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--transparent-border);
+            font-size: 16px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.25);
+            color: #fff;
+        }
+        
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        button {
+            background: linear-gradient(to right, var(--secondary), var(--accent));
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:hover {
+            background: linear-gradient(to right, rgba(154, 125, 190, 0.8), rgba(215, 92, 127, 0.8));
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button.connected {
+            background: linear-gradient(to right, var(--success), rgba(90, 180, 101, 0.8));
+        }
+        
+        button.error {
+            background: linear-gradient(to right, var(--error), rgba(215, 92, 127, 0.8));
+        }
+        
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .message {
+            padding: 15px 20px;
+            border-radius: 15px;
+            max-width: 90%;
+            line-height: 1.5;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+            animation: fadeIn 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-message {
+            background: linear-gradient(to right, var(--secondary), rgba(106, 77, 142, 0.6));
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+            color: white;
+        }
+        
+        .ai-message {
+            background: linear-gradient(to right, var(--primary), rgba(122, 93, 160, 0.6));
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            color: white;
+        }
+        
+        .system-message {
+            background: rgba(255, 255, 255, 0.15);
+            align-self: center;
+            max-width: 90%;
+            text-align: center;
+            font-style: italic;
+            color: #f0e6ff;
+        }
+        
+        .error-message {
+            background: linear-gradient(to right, var(--error), rgba(215, 92, 127, 0.6));
+            align-self: center;
+            max-width: 90%;
+            color: white;
+        }
+        
+        .message-sender {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #ffd700;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        .message-time {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 5px;
+            text-align: right;
+            color: #f0e6ff;
+        }
+        
+        .message-input-container {
+            padding: 15px;
+            background: rgba(71, 55, 99, 0.4);
+            border-top: 2px solid var(--transparent-border);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .input-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        #user-input {
+            flex: 1;
+            margin-right: 0;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        #user-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        #send-btn {
+            background: linear-gradient(to right, var(--accent), var(--error));
+            width: auto;
+            padding: 12px 20px;
+        }
+        
+        #send-btn:hover {
+            background: linear-gradient(to right, rgba(215, 92, 127, 0.8), rgba(233, 125, 153, 0.8));
+        }
+        
+        .file-upload-btn {
+            background: linear-gradient(to right, rgba(155, 89, 182, 0.6), var(--secondary));
+            width: auto;
+            padding: 12px 15px;
+        }
+        
+        .file-upload-btn:hover {
+            background: linear-gradient(to right, rgba(171, 105, 198, 0.8), rgba(154, 125, 190, 0.8));
+        }
+        
+        .status-bar {
+            padding: 12px 20px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            border-top: 2px solid var(--accent);
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--error);
+            box-shadow: 0 0 5px var(--error);
+        }
+        
+        .status-dot.connected {
+            background: var(--success);
+            box-shadow: 0 0 5px var(--success);
+        }
+        
+        .contact-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: currentColor;
+            opacity: 0.6;
+            animation: typingAnimation 1.4s infinite;
+        }
+        
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typingAnimation {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9a7dbe;
+        }
+        
+        /* 隧道配置样式 */
+        .tunnel-config {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #26a69a;
+        }
+        
+        .tunnel-config h3 {
+            color: #26a69a;
+            margin-bottom: 10px;
+        }
+        
+        .connection-type {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .connection-type label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        
+        .connection-type input[type="radio"] {
+            width: auto;
+        }
+        
+        /* 密码输入区域样式 */
+        .password-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 40px;
+            background: none;
+            border: none;
+            color: var(--light);
+            cursor: pointer;
+            width: auto;
+            padding: 0;
+            font-size: 18px;
+        }
+        
+        /* 响应时间滑块样式 */
+        .slider-container {
+            margin-top: 10px;
+        }
+        
+        .slider-value {
+            text-align: center;
+            margin-top: 5px;
+            font-weight: 600;
+            color: #ffd700;
+        }
+        
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+        
+        @media (max-width: 600px) {
+            .login-container {
+                height: auto;
+                border-radius: 15px;
+            }
+            
+            .chat-container {
+                border-radius: 0;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .brand {
+                font-size: 14px;
+            }
+            
+            .config-section {
+                padding: 15px;
+            }
+            
+            .message {
+                max-width: 95%;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+        
+        /* 小鸟游六花主题元素 */
+        .eye-patch {
+            position: absolute;
+            top: -5px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            background: #000;
+            border-radius: 50%;
+            border: 2px solid #ffd700;
+            transform: rotate(10deg);
+            z-index: 1;
+        }
+        
+        .eye-patch::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            background: #ffd700;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .magic-circle {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            width: 60px;
+            height: 60px;
+            border: 2px solid #ffd700;
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: rotate 20s linear infinite;
+        }
+        
+        .magic-circle::before, .magic-circle::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80%;
+            height: 80%;
+            border: 1px solid #ffd700;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .magic-circle::after {
+            width: 60%;
+            height: 60%;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 背景控制按钮 */
+        .background-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .bg-btn {
+            padding: 10px 15px;
+            border-radius: 8px;
+            background: var(--transparent-bg);
+            color: white;
+            border: 1px solid var(--transparent-border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .bg-btn:hover {
+            background: rgba(90, 70, 120, 0.5);
+        }
+        
+        /* 背景设置面板 */
+        .bg-config {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #9b59b6;
+        }
+        
+        .bg-config h3 {
+            color: #9b59b6;
+            margin-bottom: 10px;
+        }
+        
+        .bg-thumbnails {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        
+        .bg-thumbnail {
+            width: 60px;
+            height: 60px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .bg-thumbnail:hover {
+            transform: scale(1.1);
+        }
+        
+        .bg-thumbnail.active {
+            border-color: #ffd700;
+            box-shadow: 0 0 8px #ffd700;
+        }
+        
+        /* 返回按钮 */
+        .back-btn {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* 音乐播放器样式 */
+        .music-player {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+            background: var(--transparent-bg);
+            padding: 10px 15px;
+            border-radius: 30px;
+            border: 1px solid var(--transparent-border);
+        }
+        
+        .music-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            cursor: pointer;
+            border: none;
+            font-size: 18px;
+        }
+        
+        .music-btn:hover {
+            background: var(--accent);
+        }
+        
+        .music-title {
+            font-size: 14px;
+            color: #f0e6ff;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .volume-control {
+            width: 80px;
+            -webkit-appearance: none;
+            height: 5px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+        }
+        
+        .volume-control::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+        }
+
+        /* 日文风格装饰 */
+        .japanese-decoration {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            letter-spacing: 2px;
+        }
+
+        .japanese-border {
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 5px;
+            padding: 5px;
+            margin: 2px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-slideshow" id="background-slideshow">
+        <!-- 修改为加载本地图片 -->
+        <div class="slide active" style="background-image: url('1.png')"></div>
+        <div class="slide" style="background-image: url('2.png')"></div>
+        <div class="slide" style="background-image: url('3.png')"></div>
+        <div class="slide" style="background-image: url('4.png')"></div>
+        <div class="slide" style="background-image: url('5.png')"></div>
+        <div class="slide" style="background-image: url('6.png')"></div>
+    </div>
+    <div class="background-overlay"></div>
+    
+    <!-- 连接页面 -->
+    <div class="login-container" id="login-page">
+        <div class="header">
+            <div class="brand">
+                <i class="fas fa-magic"></i> by dsb
+            </div>
+            <div class="character">
+                六花
+                <div class="eye-patch"></div>
+            </div>
+            <h1>六花のOllamaチャットルーム</h1>
+            <p>AIアシスタントとの対話</p>
+        </div>
+        
+        <div class="config-section">
+            <button class="accordion">
+                <span><i class="fas fa-cog"></i> 接続設定</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="panel">
+                <div class="panel-content">
+                    <div class="connection-type">
+                        <label>
+                            <input type="radio" name="connection-type" value="direct" checked>
+                            <span>直接接続</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="connection-type" value="tunnel">
+                            <span>トンネル接続</span>
+                        </label>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="ollama-url">Ollama サーバーアドレス</label>
+                        <input type="text" id="ollama-url" value="http://localhost:11434" placeholder="例: http://localhost:11434">
+                    </div>
+                    
+                    <!-- 密码输入区域 -->
+                    <div class="password-group">
+                        <label for="access-password">アクセスパスワード</label>
+                        <input type="password" id="access-password" placeholder="アクセスパスワードを入力してください">
+                        <button type="button" class="password-toggle" id="toggle-access-password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- 隧道配置区域（默认隐藏） -->
+                    <div class="tunnel-config" style="display: none;">
+                        <h3><i class="fas fa-server"></i> トンネル設定</h3>
+                        <div class="input-group">
+                            <label for="tunnel-url">トンネルサーバーアドレス</label>
+                            <input type="text" id="tunnel-url" placeholder="例: https://your-tunnel-service.com">
+                        </div>
+                        <div class="password-group">
+                            <label for="tunnel-password">トンネルアクセスパスワード</label>
+                            <input type="password" id="tunnel-password" placeholder="トンネルアクセスパスワードを入力">
+                            <button type="button" class="password-toggle" id="toggle-tunnel-password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="accordion">
+                <span><i class="fas fa-robot"></i> モデル設定</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="panel">
+                <div class="panel-content">
+                    <div class="input-group">
+                        <label for="model-select">モデル選択</label>
+                        <select id="model-select">
+                            <option value="llama2">Llama2</option>
+                            <option value="mistral">Mistral</option>
+                            <option value="codellama">Code Llama</option>
+                            <option value="huihui_ai/deepseek-r1-abliterated:8b">DeepSeek R1 Abliterated (8B)</option>
+                            <option value="rikka">六花 (Rikka)</option>
+                            <option value="custom">カスタムモデル...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group" id="custom-model-group" style="display: none;">
+                        <label for="custom-model">カスタムモデル名</label>
+                        <input type="text" id="custom-model" placeholder="カスタムモデル名を入力">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="temperature">温度値 (0.0-1.0)</label>
+                        <input type="number" id="temperature" min="0" max="1" step="0.1" value="0.7">
+                    </div>
+                    
+                    <!-- 响应时间设置 -->
+                    <div class="input-group">
+                        <label for="response-time">応答時間 (秒)</label>
+                        <input type="range" id="response-time" class="slider" min="1" max="3600" value="30">
+                        <div class="slider-value" id="response-time-value">30秒</div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="accordion">
+                <i class="fas fa-image"></i> 背景設定
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="panel">
+                <div class="panel-content">
+                    <div class="bg-config">
+                        <h3><i class="fas fa-image"></i> 背景設定</h3>
+                        <div class="bg-thumbnails">
+                            <!-- 修改为加载本地图片 -->
+                            <div class="bg-thumbnail active" style="background-image: url('1.png')" data-bg="1.png"></div>
+                            <div class="bg-thumbnail" style="background-image: url('2.png')" data-bg="2.png"></div>
+                            <div class="bg-thumbnail" style="background-image: url('3.png')" data-bg="3.png"></div>
+                            <div class="bg-thumbnail" style="background-image: url('4.png')" data-bg="4.png"></div>
+                            <div class="bg-thumbnail" style="background-image: url('5.png')" data-bg="5.png"></div>
+                            <div class="bg-thumbnail" style="background-image: url('6.png')" data-bg="6.png"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="connect-btn" class="connect-btn">
+                <i class="fas fa-plug"></i> Ollamaに接続
+            </button>
+        </div>
+        
+        <div class="magic-circle"></div>
+    </div>
+    
+    <!-- 聊天页面（默认隐藏） -->
+    <div class="chat-container" id="chat-page">
+        <div class="header">
+            <button class="back-btn" id="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="brand">
+                <i class="fas fa-magic"></i> by dsb
+            </div>
+            <div class="character">
+                六花
+                <div class="eye-patch"></div>
+            </div>
+            <h1>六花のOllamaチャットルーム</h1>
+            <p id="model-info">現在のモデル: Llama2</p>
+        </div>
+        
+        <div class="chat-area">
+            <div class="chat-messages" id="chat-messages">
+                <!-- 聊天消息会在这里动态添加 -->
+                <div class="system-message">
+                    六花のOllamaチャットルームへようこそ！メッセージを入力して会話を始めてください。
+                </div>
+            </div>
+            
+            <div class="message-input-container">
+                <div class="input-actions">
+                    <textarea id="user-input" rows="3" placeholder="メッセージを入力..."></textarea>
+                    <button id="send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot" id="connection-status"></div>
+                <span id="status-text">未接続</span>
+            </div>
+            <div class="contact-info">
+                <span id="typing-indicator" style="display: none;">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span> 六花が入力中...</span>
+                </span>
+            </div>
+        </div>
+        
+        <div class="magic-circle"></div>
+    </div>
+    
+    <!-- 背景控制按钮 -->
+    <div class="background-controls">
+        <button class="bg-btn" id="prev-bg">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="bg-btn" id="next-bg">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+    
+    <!-- 音乐播放器 -->
+    <div class="music-player">
+        <button class="music-btn" id="play-pause-btn">
+            <i class="fas fa-play"></i>
+        </button>
+        <div class="music-title" id="music-title">1.mp3</div>
+        <input type="range" class="volume-control" id="volume-control" min="0" max="1" step="0.1" value="0.5">
+    </div>
+    
+    <!-- 音频元素 -->
+    <audio id="bg-music" loop>
+        <source src="1.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // 预加载背景图片
+        function preloadBackgroundImages() {
+            const imageUrls = [
+                '1.png',
+                '2.png',
+                '3.png',
+                '4.png',
+                '5.png',
+                '6.png'
+            ];
+            
+            imageUrls.forEach(url => {
+                const img = new Image();
+                img.src = url;
+            });
+        }
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 预加载背景图片
+            preloadBackgroundImages();
+            
+            // 背景轮播功能
+            const slides = document.querySelectorAll('.slide');
+            const bgThumbnails = document.querySelectorAll('.bg-thumbnail');
+            let currentSlide = 0;
+            
+            // 显示当前幻灯片
+            function showSlide(index) {
+                slides.forEach(slide => slide.classList.remove('active'));
+                slides[index].classList.add('active');
+                
+                // 更新缩略图激活状态
+                bgThumbnails.forEach(thumb => thumb.classList.remove('active'));
+                bgThumbnails[index].classList.add('active');
+                
+                currentSlide = index;
+            }
+            
+            // 下一张幻灯片
+            function nextSlide() {
+                let newIndex = (currentSlide + 1) % slides.length;
+                showSlide(newIndex);
+            }
+            
+            // 上一张幻灯片
+            function prevSlide() {
+                let newIndex = (currentSlide - 1 + slides.length) % slides.length;
+                showSlide(newIndex);
+            }
+            
+            // 自动轮播
+            let slideInterval = setInterval(nextSlide, 5000);
+            
+            // 背景缩略图点击事件
+            bgThumbnails.forEach((thumb, index) => {
+                thumb.addEventListener('click', () => {
+                    // 重置自动轮播计时器
+                    clearInterval(slideInterval);
+                    showSlide(index);
+                    slideInterval = setInterval(nextSlide, 5000);
+                });
+            });
+            
+            // 背景控制按钮事件
+            document.getElementById('next-bg').addEventListener('click', () => {
+                clearInterval(slideInterval);
+                nextSlide();
+                slideInterval = setInterval(nextSlide, 5000);
+            });
+            
+            document.getElementById('prev-bg').addEventListener('click', () => {
+                clearInterval(slideInterval);
+                prevSlide();
+                slideInterval = setInterval(nextSlide, 5000);
+            });
+            
+            // 手风琴效果
+            const accordions = document.querySelectorAll('.accordion');
+            accordions.forEach(accordion => {
+                accordion.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const panel = this.nextElementSibling;
+                    const icon = this.querySelector('.fa-chevron-down');
+                    
+                    if (panel.style.maxHeight) {
+                        panel.style.maxHeight = null;
+                        icon.style.transform = 'rotate(0deg)';
+                    } else {
+                        panel.style.maxHeight = panel.scrollHeight + 'px';
+                        icon.style.transform = 'rotate(180deg)';
+                    }
+                });
+            });
+            
+            // 默认打开第一个手风琴
+            if (accordions.length > 0) {
+                accordions[0].click();
+            }
+            
+            // 模型选择逻辑
+            const modelSelect = document.getElementById('model-select');
+            const customModelGroup = document.getElementById('custom-model-group');
+            
+            modelSelect.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customModelGroup.style.display = 'block';
+                } else {
+                    customModelGroup.style.display = 'none';
+                }
+            });
+            
+            // 响应时间滑块
+            const responseTimeSlider = document.getElementById('response-time');
+            const responseTimeValue = document.getElementById('response-time-value');
+            
+            responseTimeSlider.addEventListener('input', function() {
+                responseTimeValue.textContent = this.value + '秒';
+            });
+            
+            // 密码显示/隐藏切换
+            const togglePassword = document.getElementById('toggle-access-password');
+            const passwordInput = document.getElementById('access-password');
+            
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // 切换图标
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+            
+            // 隧道密码显示/隐藏切换
+            const toggleTunnelPassword = document.getElementById('toggle-tunnel-password');
+            const tunnelPasswordInput = document.getElementById('tunnel-password');
+            
+            if (toggleTunnelPassword) {
+                toggleTunnelPassword.addEventListener('click', function() {
+                    const type = tunnelPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    tunnelPasswordInput.setAttribute('type', type);
+                    
+                    // 切换图标
+                    this.querySelector('i').classList.toggle('fa-eye');
+                    this.querySelector('i').classList.toggle('fa-eye-slash');
+                });
+            }
+            
+            // 连接类型切换
+            const connectionTypes = document.querySelectorAll('input[name="connection-type"]');
+            const tunnelConfig = document.querySelector('.tunnel-config');
+            
+            connectionTypes.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'tunnel') {
+                        tunnelConfig.style.display = 'block';
+                    } else {
+                        tunnelConfig.style.display = 'none';
+                    }
+                });
+            });
+            
+            // 连接按钮点击事件
+            const connectBtn = document.getElementById('connect-btn');
+            const loginPage = document.getElementById('login-page');
+            const chatPage = document.getElementById('chat-page');
+            const modelInfo = document.getElementById('model-info');
+            const connectionStatus = document.getElementById('connection-status');
+            const statusText = document.getElementById('status-text');
+            
+            connectBtn.addEventListener('click', function() {
+                // 获取配置信息
+                const ollamaUrl = document.getElementById('ollama-url').value;
+                const password = document.getElementById('access-password').value;
+                const modelSelect = document.getElementById('model-select');
+                let model = modelSelect.value === 'custom' 
+                    ? document.getElementById('custom-model').value 
+                    : modelSelect.value;
+                
+                // 简单验证
+                if (!ollamaUrl) {
+                    alert('Ollamaサーバーアドレスを入力してください');
+                    return;
+                }
+                
+                if (!password) {
+                    alert('アクセスパスワードを入力してください');
+                    return;
+                }
+                
+                if (!model) {
+                    alert('モデル名を選択または入力してください');
+                    return;
+                }
+                
+                // 更新模型信息显示
+                const modelDisplayNames = {
+                    'llama2': 'Llama2',
+                    'mistral': 'Mistral',
+                    'codellama': 'Code Llama',
+                    'huihui_ai/deepseek-r1-abliterated:8b': 'DeepSeek R1 Abliterated (8B)',
+                    'rikka': '六花 (Rikka)'
+                };
+                
+                modelInfo.textContent = `現在のモデル: ${modelDisplayNames[model] || model}`;
+                
+                // 模拟连接过程
+                connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 接続中...';
+                connectBtn.disabled = true;
+                
+                // 模拟连接延迟
+                setTimeout(() => {
+                    // 切换到聊天页面
+                    loginPage.style.display = 'none';
+                    chatPage.style.display = 'flex';
+                    
+                    // 更新连接状态
+                    connectionStatus.classList.add('connected');
+                    statusText.textContent = '接続済み: ' + ollamaUrl;
+                    
+                    // 重置连接按钮
+                    connectBtn.innerHTML = '<i class="fas fa-plug"></i> Ollamaに接続';
+                    connectBtn.disabled = false;
+                    
+                    // 显示欢迎消息
+                    addMessageToChat('システム', 'Ollamaに接続されました。会話を始めましょう！', 'system-message');
+                }, 1500);
+            });
+            
+            // 返回按钮事件
+            document.getElementById('back-btn').addEventListener('click', function() {
+                chatPage.style.display = 'none';
+                loginPage.style.display = 'block';
+                
+                // 重置连接状态
+                connectionStatus.classList.remove('connected');
+                statusText.textContent = '未接続';
+                
+                // 清空聊天记录
+                document.getElementById('chat-messages').innerHTML = 
+                    '<div class="system-message">六花のOllamaチャットルームへようこそ！メッセージを入力して会話を始めてください。</div>';
+                
+                // 重置聊天历史
+                chatHistory = [];
+            });
+            
+            // 发送消息功能
+            const sendBtn = document.getElementById('send-btn');
+            const userInput = document.getElementById('user-input');
+            const chatMessages = document.getElementById('chat-messages');
+            const typingIndicator = document.getElementById('typing-indicator');
+            
+            // 聊天历史记录
+            let chatHistory = [];
+            
+            // 发送消息函数
+            async function sendMessage() {
+                const message = userInput.value.trim();
+                if (!message) return;
+                
+                // 添加用户消息 - 将"用户"改为"勇太"
+                addMessageToChat('勇太', message, 'user-message');
+                
+                // 将消息添加到历史记录
+                chatHistory.push({ role: 'user', content: message });
+                
+                // 清空输入框
+                userInput.value = '';
+                
+                // 显示正在输入状态
+                typingIndicator.style.display = 'inline-flex';
+                
+                try {
+                    // 获取配置信息
+                    const ollamaUrl = document.getElementById('ollama-url').value;
+                    const modelSelect = document.getElementById('model-select');
+                    let model = modelSelect.value === 'custom' 
+                        ? document.getElementById('custom-model').value 
+                        : modelSelect.value;
+                    const temperature = parseFloat(document.getElementById('temperature').value);
+                    const responseTime = parseInt(document.getElementById('response-time').value) * 1000; // 转换为毫秒
+                    
+                    // 准备请求数据
+                    const requestData = {
+                        model: model,
+                        messages: chatHistory,
+                        options: {
+                            temperature: temperature
+                        },
+                        stream: false
+                    };
+                    
+                    // 设置超时
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), responseTime);
+                    
+                    // 发送请求到Ollama API
+                    const response = await fetch(`${ollamaUrl}/api/chat`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestData),
+                        signal: controller.signal
+                    });
+                    
+                    // 清除超时
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        throw new Error(`サーバーエラー: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // 隐藏正在输入状态
+                    typingIndicator.style.display = 'none';
+                    
+                    // 添加AI回复到聊天
+                    let aiResponse = data.message.content;
+                    
+                    // 过滤掉思考内容，只保留回复
+                    if (aiResponse.includes('思考:')) {
+                        aiResponse = aiResponse.split('思考:')[0].trim();
+                    }
+                    
+                    // 根据模型类型生成六花风格的回复
+                    if (model === 'rikka') {
+                        aiResponse = generateRikkaResponse(aiResponse);
+                    }
+                    
+                    addMessageToChat('六花', aiResponse, 'ai-message');
+                    
+                    // 将AI回复添加到历史记录
+                    chatHistory.push({ role: 'assistant', content: aiResponse });
+                    
+                } catch (error) {
+                    // 隐藏正在输入状态
+                    typingIndicator.style.display = 'none';
+                    
+                    // 显示错误消息
+                    let errorMessage = 'リクエスト失敗: ';
+                    if (error.name === 'AbortError') {
+                        errorMessage += '応答がタイムアウトしました。応答時間を増やすかサーバー接続を確認してください';
+                    } else {
+                        errorMessage += error.message;
+                    }
+                    
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message message';
+                    errorDiv.textContent = errorMessage;
+                    chatMessages.appendChild(errorDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            }
+            
+            // 生成六花风格的回复
+            function generateRikkaResponse(response) {
+                const rikkaPhrases = [
+                    "邪王真眼は最強です！",
+                    "これは不可視境界線の力...",
+                    "私の邪王真眼が真実を見た！",
+                    "これはダークセイクリッドに記された秘術...",
+                    "邪王真眼の名において、私は宣言する...",
+                    "これは不可視境界線からの啓示...",
+                    "闇の力が私を導いている...",
+                    "私の邪王真眼が騒ぎだしている..."
+                ];
+                
+                // 随机添加六花风格的短语
+                if (Math.random() > 0.5) {
+                    const randomPhrase = rikkaPhrases[Math.floor(Math.random() * rikkaPhrases.length)];
+                    response = randomPhrase + " " + response;
+                }
+                
+                return response;
+            }
+            
+            // 添加消息到聊天区域
+            function addMessageToChat(sender, text, className) {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString();
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${className}`;
+                messageDiv.innerHTML = `
+                    <div class="message-sender">${sender}</div>
+                    <div class="message-content">${text}</div>
+                    <div class="message-time">${timeString}</div>
+                `;
+                
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // 发送按钮点击事件
+            sendBtn.addEventListener('click', sendMessage);
+            
+            // 回车键发送消息
+            userInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // 音乐播放器功能
+            const audio = document.getElementById('bg-music');
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            const volumeControl = document.getElementById('volume-control');
+            
+            // 播放/暂停按钮事件
+            playPauseBtn.addEventListener('click', function() {
+                if (audio.paused) {
+                    audio.play();
+                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                } else {
+                    audio.pause();
+                    playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            });
+            
+            // 音量控制事件
+            volumeControl.addEventListener('input', function() {
+                audio.volume = this.value;
+            });
+            
+            // 尝试自动播放音乐
+            setTimeout(() => {
+                audio.play().then(() => {
+                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                }).catch(error => {
+                    console.log('自動再生がブロックされました。ユーザーの操作が必要です。');
+                });
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
