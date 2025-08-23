@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>六花チャットルーム | by dsb</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #a855f7;
+            --secondary: #c084fc;
+            --accent: #ec4899;
+            --light: rgba(249, 249, 249, 0.7);
+            --dark: #333;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+            
+            /* 夢幻紫のカラーパレット */
+            --dream-purple-1: #a855f7;
+            --dream-purple-2: #c084fc;
+            --dream-purple-3: #d8b4fe;
+            --dream-purple-4: #e9d5ff;
+            --dream-pink: #ec4899;
+            --dream-blue: #818cf8;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans JP', 'Comic Neue', sans-serif;
+        }
+        
+        body {
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+        }
+        
+        /* 背景ビデオ容器 */
+        .background-video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+            overflow: hidden;
+        }
+        
+        .background-video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translateX(-50%) translateY(-50%);
+            object-fit: cover;
+        }
+        
+        /* 二次元風の模様 */
+        .anime-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.05) 0%, transparent 20%);
+            z-index: -1;
+        }
+        
+        /* 桜の花びらアニメーション */
+        .sakura-petal {
+            position: absolute;
+            background-color: #ffccd5;
+            border-radius: 50% 50% 0 0;
+            opacity: 0.7;
+            animation: fall linear infinite;
+            z-index: -1;
+        }
+        
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 600px;
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+            background: rgba(79, 70, 229, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1;
+        }
+        
+        .chat-container {
+            width: 100%;
+            max-width: 1000px;
+            height: 90vh;
+            border-radius: 15px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            display: none;
+            background: rgba(79, 70, 229, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            margin: 20px;
+        }
+        
+        /* 六花テーマ */
+        .rikka-theme {
+            --primary: #c084fc;
+            --secondary: #e9d5ff;
+            --accent: #ec4899;
+            --header-bg: linear-gradient(135deg, var(--dream-purple-1), var(--dream-pink));
+            --message-user: linear-gradient(135deg, var(--dream-purple-1), var(--dream-pink));
+            --message-ai: linear-gradient(135deg, var(--dream-purple-3), var(--dream-blue));
+            --button-bg: linear-gradient(135deg, var(--dream-purple-1), var(--dream-pink));
+            --status-bg: linear-gradient(135deg, var(--dream-purple-1), var(--dream-pink));
+            
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        /* リチュアルマーク */
+        .magic-circle {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            top: -60px;
+            right: -60px;
+            z-index: 0;
+            animation: rotate 60s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* リチュアルマーク内の記号 */
+        .magic-circle::before, .magic-circle::after {
+            content: '';
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .magic-circle::before {
+            width: 2px;
+            height: 100%;
+            left: 50%;
+            top: 0;
+        }
+        
+        .magic-circle::after {
+            width: 100%;
+            height: 2px;
+            left: 0;
+            top: 50%;
+        }
+        
+        /* リリステーマ */
+        .lilith-theme {
+            --primary: #a855f7;
+            --secondary: #d8b4fe;
+            --accent: #f472b6;
+            --header-bg: linear-gradient(135deg, #7e22ce, #c084fc);
+            --message-user: linear-gradient(135deg, #7e22ce, #c084fc);
+            --message-ai: linear-gradient(135deg, #d8b4fe, #f472b6);
+            --button-bg: linear-gradient(135deg, #7e22ce, #c084fc);
+            --status-bg: linear-gradient(135deg, #7e22ce, #c084fc);
+        }
+        
+        .header {
+            padding: 20px;
+            position: relative;
+            text-align: center;
+            background: var(--header-bg, linear-gradient(to right, var(--primary), var(--secondary)));
+            color: white;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .brand {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 16px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+        }
+        
+        .brand i {
+            margin-right: 8px;
+        }
+        
+        .character {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin: 0;
+            padding: 10px 0;
+            font-family: 'Comic Neue', cursive;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header p {
+            margin: 5px 0 0;
+            opacity: 0.8;
+            font-size: 14px;
+        }
+        
+        .config-section {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .accordion {
+            cursor: pointer;
+            padding: 15px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .accordion:hover {
+            opacity: 0.9;
+        }
+        
+        .accordion.active {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        
+        .panel {
+            padding: 0 18px;
+            background-color: rgba(255, 255, 255, 0.1);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .panel-content {
+            padding: 15px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        input, select, button, textarea {
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+        
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        button {
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button.connected {
+            background: linear-gradient(to right, var(--success), rgba(90, 180, 101, 0.8));
+        }
+        
+        button.error {
+            background: linear-gradient(to right, var(--error), rgba(215, 92, 127, 0.8));
+        }
+        
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .message {
+            padding: 15px 20px;
+            border-radius: 15px;
+            max-width: 90%;
+            line-height: 1.5;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: fadeIn 0.3s ease;
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* 六花のメッセージには魔法陣のアイコンを追加 */
+        .rikka-theme .ai-message::before {
+            content: '✨';
+            position: absolute;
+            left: -10px;
+            top: 10px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+            background: var(--message-user, linear-gradient(to right, var(--primary), var(--secondary)));
+            color: white;
+        }
+        
+        .ai-message {
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            background: var(--message-ai, linear-gradient(to right, var(--dream-purple-3), var(--dream-blue)));
+            color: white;
+        }
+        
+        .system-message {
+            background: rgba(255, 255, 255, 0.1);
+            align-self: center;
+            max-width: 90%;
+            text-align: center;
+            font-style: italic;
+            color: #fff;
+        }
+        
+        .error-message {
+            background: linear-gradient(to right, var(--error), rgba(215, 92, 127, 0.6));
+            align-self: center;
+            max-width: 90%;
+            color: white;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+        }
+        
+        .message-sender {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 5px;
+            text-align: right;
+        }
+        
+        .message-input-container {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .input-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        #user-input {
+            flex: 1;
+            margin-right: 0;
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            resize: vertical;
+        }
+        
+        #user-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        #send-btn {
+            background: var(--button-bg, linear-gradient(to right, var(--primary), var(--secondary)));
+            width: auto;
+            padding: 12px 20px;
+            color: white;
+        }
+        
+        .file-upload-btn {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            width: auto;
+            padding: 12px 15px;
+            color: white;
+        }
+        
+        .status-bar {
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            background: var(--status-bg, linear-gradient(to right, var(--primary), var(--secondary)));
+            color: white;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ccc;
+            box-shadow: 0 0 5px #ccc;
+        }
+        
+        .status-dot.connected {
+            background: var(--success);
+            box-shadow: 0 0 5px var(--success);
+        }
+        
+        .status-dot.reconnecting {
+            background: var(--warning);
+            box-shadow: 0 0 5px var(--warning);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        .contact-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: currentColor;
+            opacity: 0.6;
+            animation: typingAnimation 1.4s infinite;
+        }
+        
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typingAnimation {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        /* スクロールバーのスタイル */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* パスワード入力エリアのスタイル */
+        .password-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 40px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: auto;
+            padding: 0;
+            font-size: 18px;
+            color: #fff;
+        }
+        
+        /* 応答時間スライダーのスタイル */
+        .slider-container {
+            margin-top: 10px;
+        }
+        
+        .slider-value {
+            text-align: center;
+            margin-top: 5px;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+        
+        @media (max-width: 600px) {
+            .login-container {
+                height: auto;
+                border-radius: 15px;
+            }
+            
+            .chat-container {
+                border-radius: 0;
+                height: 100vh;
+                max-width: 100%;
+                margin: 0;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .brand {
+                font-size: 14px;
+            }
+            
+            .config-section {
+                padding: 15px;
+            }
+            
+            .message {
+                max-width: 95%;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .input-actions {
+                flex-direction: column;
+            }
+            
+            #send-btn, .file-upload-btn {
+                width: 100%;
+            }
+        }
+        
+        /* ファイルアップロードエリア */
+        .file-upload-area {
+            margin-top: 15px;
+            padding: 15px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .file-upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(79, 172, 254, 0.1);
+        }
+        
+        .file-upload-area i {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .file-upload-area p {
+            margin: 0;
+            font-size: 14px;
+            color: #fff;
+        }
+        
+        .uploaded-file {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(79, 172, 254, 0.1);
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .uploaded-file .file-name {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #fff;
+        }
+        
+        .uploaded-file .remove-file {
+            background: none;
+            border: none;
+            color: #ff4757;
+            cursor: pointer;
+            width: auto;
+            padding: 5px;
+            font-size: 16px;
+        }
+        
+        /* チャットコントロールボタン */
+        .chat-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .chat-control-btn {
+            flex: 1;
+            padding: 10px;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .chat-control-btn:hover {
+            opacity: 0.9;
+        }
+        
+        /* 夢幻的なエフェクト */
+        .dreamy-effect {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .dreamy-particle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 15s infinite linear;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        /* 小説生成器特有のスタイル */
+        .novel-panel {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .novel-panel h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .novel-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .novel-control-btn {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(to right, #8e44ad, #9b59b6);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .novel-control-btn:hover {
+            opacity: 0.9;
+        }
+        
+        /* 小説生成器チャットインターフェースのスタイル */
+        .novel-generator-interface {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        /* エラーダイアログ */
+        .error-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(79, 70, 229, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .error-dialog h3 {
+            color: #ff4757;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .error-dialog p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .error-dialog-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .error-dialog-buttons button {
+            flex: none;
+            width: auto;
+            padding: 10px 20px;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(3px);
+            z-index: 999;
+            display: none;
+        }
+        
+        /* AI绘画按钮样式 */
+        .ai-painting-btn {
+            margin-top: 15px;
+            text-align: center;
+            padding: 12px;
+            background: linear-gradient(to right, #ff6b6b, #ff8e8e);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .ai-painting-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* 连接状态指示器 */
+        .connection-info {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .connection-info.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+        }
+        
+        .connection-info.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid rgba(244, 67, 54, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景ビデオ容器 -->
+    <div class="background-video-container">
+        <video class="background-video" autoplay muted loop id="bg-video">
+            <source src="1.mp4" type="video/mp4">
+            ブラウザがビデオ背景をサポートしていません
+        </video>
+    </div>
+    
+    <!-- アニメ模様 -->
+    <div class="anime-pattern"></div>
+    
+    <!-- 夢幻粒子エフェクト -->
+    <div class="dreamy-effect" id="dreamy-effect"></div>
+    
+    <!-- エラーダイアログ -->
+    <div class="overlay" id="overlay"></div>
+    <div class="error-dialog" id="error-dialog">
+        <h3><i class="fas fa-exclamation-circle"></i> 接続エラー</h3>
+        <p id="error-message">APIへの接続に失敗しました。ローカルサーバーが起動しているか確認してください。</p>
+        <div class="error-dialog-buttons">
+            <button id="retry-btn"><i class="fas fa-sync-alt"></i> 再試行</button>
+            <button id="settings-btn"><i class="fas fa-cog"></i> 設定を変更</button>
+        </div>
+    </div>
+    
+    <!-- 接続ページ -->
+    <div class="login-container" id="login-page">
+        <div class="header">
+            <div class="brand">
+                <i class="fas fa-magic"></i> by dsb
+            </div>
+            <h1>Ollamaチャットルーム</h1>
+            <p>AIアシスタントと対話する</p>
+        </div>
+        
+        <div class="config-section">
+            <button class="accordion">
+                <span><i class="fas fa-cog"></i> 接続設定</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="panel">
+                <div class="panel-content">
+                    <div class="input-group">
+                        <label for="ollama-url">Ollama サーバーアドレス</label>
+                        <input type="text" id="ollama-url" value="http://localhost:11434" placeholder="例: http://localhost:11434">
+                    </div>
+                    
+                    <!-- パスワード入力エリア -->
+                    <div class="password-group">
+                        <label for="access-password">アクセスパスワード <span style="color:#ff4757">*</span></label>
+                        <input type="password" id="access-password" placeholder="アクセスパスワードを入力してください" required>
+                        <button type="button" class="password-toggle" id="toggle-access-password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="connection-info" class="connection-info" style="display: none;">
+                        <i class="fas fa-info-circle"></i> <span id="connection-info-text"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="accordion">
+                <span><i class="fas fa-robot"></i> モデル設定</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="panel">
+                <div class="panel-content">
+                    <div class="input-group">
+                        <label for="model-select">モデル選択</label>
+                        <select id="model-select">
+                            <option value="huihui_ai/deepseek-r1-abliterated:7b">DeepSeek R1 Abliterated (7B)</option>
+                            <option value="huihui_ai/deepseek-r1-abliterated:8b">DeepSeek R1 Abliterated (8B)</option>
+                            <option value="rikka" selected>六花 (Rikka)</option>
+                            <option value="lilith">Lilith</option>
+                            <option value="novel-writer">小説生成器</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="temperature">温度値 (0.0-1.0)</label>
+                        <input type="number" id="temperature" min="0" max="1" step="0.1" value="0.7">
+                    </div>
+                    
+                    <!-- 応答時間設定 -->
+                    <div class="input-group">
+                        <label for="response-time">応答時間 (秒)</label>
+                        <input type="range" id="response-time" class="slider" min="1" max="3600" value="30">
+                        <div class="slider-value" id="response-time-value">30秒</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI绘画按钮 -->
+            <div class="ai-painting-btn" id="ai-painting-btn">
+                <i class="fas fa-paint-brush"></i> AI绘画
+            </div>
+            
+            <!-- ファイルアップロードエリア -->
+            <div class="file-upload-area" id="file-upload-area">
+                <i class="fas fa-file-upload"></i>
+                <p>クリックまたはファイルをドラッグしてTXTファイルをアップロード</p>
+                <input type="file" id="file-input" accept=".txt" style="display: none;">
+            </div>
+            
+            <div id="uploaded-file-container" style="display: none;">
+                <div class="uploaded-file">
+                    <span class="file-name" id="uploaded-file-name"></span>
+                    <button class="remove-file" id="remove-file-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- チャット履歴インポートエリア -->
+            <div class="file-upload-area" id="chat-import-area">
+                <i class="fas fa-history"></i>
+                <p>クリックまたはチャット履歴ファイルをドラッグしてインポート</p>
+                <input type="file" id="chat-import-input" accept=".txt" style="display: none;">
+            </div>
+            
+            <div id="imported-chat-container" style="display: none;">
+                <div class="uploaded-file">
+                    <span class="file-name" id="imported-chat-name"></span>
+                    <button class="remove-file" id="remove-imported-chat-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <button id="connect-btn" class="connect-btn">
+                <i class="fas fa-plug"></i> Ollamaに接続
+            </button>
+        </div>
+    </div>
+    
+    <!-- チャットページ（デフォルトで非表示） -->
+    <div class="chat-container" id="chat-page">
+        <!-- 魔法陣デザイン（六花用） -->
+        <div class="magic-circle" id="magic-circle" style="display: none;"></div>
+        
+        <div class="header">
+            <button class="back-btn" id="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="brand">
+                <i class="fas fa-magic"></i> by dsb
+            </div>
+            <div class="character" id="character-name">
+                AI
+            </div>
+            <h1 id="chat-title">Ollamaチャットルーム</h1>
+            <p id="model-info">現在のモデル: DeepSeek R1 Abliterated (7B)</p>
+        </div>
+        
+        <!-- 通常のチャットインターフェース -->
+        <div class="chat-area" id="normal-chat-interface">
+            <div class="chat-messages" id="chat-messages">
+                <!-- チャットメッセージはここに動的に追加されます -->
+                <div class="system-message">
+                    Ollamaチャットルームへようこそ！メッセージを入力して会話を始めてください。
+                </div>
+            </div>
+            
+            <div class="message-input-container">
+                <div class="input-actions">
+                    <textarea id="user-input" rows="3" placeholder="メッセージを入力..."></textarea>
+                    <button class="file-upload-btn" id="chat-file-upload-btn">
+                        <i class="fas fa-file-upload"></i>
+                    </button>
+                    <button id="send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                
+                <!-- チャットコントロールボタン -->
+                <div class="chat-controls">
+                    <button class="chat-control-btn" id="export-chat-btn">
+                        <i class="fas fa-download"></i> チャット履歴をエクスポート
+                    </button>
+                    <button class="chat-control-btn" id="clear-chat-btn">
+                        <i class="fas fa-trash"></i> チャットをクリア
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 小説生成器インターフェース -->
+        <div class="novel-generator-interface" id="novel-generator-interface">
+            <div class="chat-messages" id="novel-output-area">
+                <!-- 小説生成結果はここに表示されます -->
+                <div class="system-message">
+                    小説生成器へようこそ！プロンプトを入力してパラメータを設定し、生成ボタンをクリックして作成を開始してください。
+                </div>
+            </div>
+            
+            <div class="message-input-container">
+                <div class="novel-panel">
+                    <div class="input-group">
+                        <label for="novel-prompt">小説プロンプト</label>
+                        <textarea id="novel-prompt" rows="3" placeholder="小説生成のプロンプトを入力してください。例：未来の世界に関するSF小説を書いて..."></textarea>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="word-count">生成字数</label>
+                        <input type="number" id="word-count" min="100" max="5000" step="100" value="1000">
+                    </div>
+                    
+                    <!-- 参考資料アップロードエリア -->
+                    <div class="file-upload-area" id="novel-reference-upload">
+                        <i class="fas fa-file-upload"></i>
+                        <p>TXT参考資料をアップロード（オプション）</p>
+                        <input type="file" id="reference-file-input" accept=".txt" style="display: none;">
+                    </div>
+                    
+                    <div id="reference-file-container" style="display: none;">
+                        <div class="uploaded-file">
+                            <span class="file-name" id="reference-file-name"></span>
+                            <button class="remove-file" id="remove-reference-file-btn">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="novel-controls">
+                        <button class="novel-control-btn" id="generate-novel-btn">
+                            <i class="fas fa-feather"></i> 小説を生成
+                        </button>
+                        <button class="novel-control-btn" id="clear-novel-btn">
+                            <i class="fas fa-trash"></i> クリア
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot" id="connection-status"></div>
+                <span id="status-text">未接続</span>
+            </div>
+            <div class="contact-info">
+                <span id="typing-indicator" style="display: none;">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span id="typing-text"> 六花が入力中...</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 创建梦幻粒子效果
+            createDreamyParticles();
+            
+            // 创建樱花花瓣
+            createSakuraPetals();
+            
+            // AI绘画按钮点击事件
+            document.getElementById('ai-painting-btn').addEventListener('click', function() {
+                window.open('http://10.242.105.131:7860', '_blank');
+            });
+            
+            // 手风琴效果
+            const accordions = document.querySelectorAll('.accordion');
+            accordions.forEach(accordion => {
+                accordion.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const panel = this.nextElementSibling;
+                    const icon = this.querySelector('.fa-chevron-down');
+                    
+                    if (panel.style.maxHeight) {
+                        panel.style.maxHeight = null;
+                        icon.style.transform = 'rotate(0deg)';
+                    } else {
+                        panel.style.maxHeight = panel.scrollHeight + 'px';
+                        icon.style.transform = 'rotate(180deg)';
+                    }
+                });
+            });
+            
+            // 默认打开第一个手风琴
+            if (accordions.length > 0) {
+                accordions[0].click();
+            }
+            
+            // 响应时间滑块
+            const responseTimeSlider = document.getElementById('response-time');
+            const responseTimeValue = document.getElementById('response-time-value');
+            
+            responseTimeSlider.addEventListener('input', function() {
+                responseTimeValue.textContent = this.value + '秒';
+            });
+            
+            // 密码显示/隐藏切换
+            const togglePassword = document.getElementById('toggle-access-password');
+            const passwordInput = document.getElementById('access-password');
+            
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // 切换图标
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+            
+            // 文件上传功能
+            const fileUploadArea = document.getElementById('file-upload-area');
+            const fileInput = document.getElementById('file-input');
+            const uploadedFileContainer = document.getElementById('uploaded-file-container');
+            const uploadedFileName = document.getElementById('uploaded-file-name');
+            const removeFileBtn = document.getElementById('remove-file-btn');
+            let uploadedFileContent = '';
+            
+            fileUploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            fileUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileUploadArea.style.borderColor = '#4facfe';
+                fileUploadArea.style.background = 'rgba(79, 172, 254, 0.2)';
+            });
+            
+            fileUploadArea.addEventListener('dragleave', () => {
+                fileUploadArea.style.borderColor = '#e0e0e0';
+                fileUploadArea.style.background = '';
+            });
+            
+            fileUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUploadArea.style.borderColor = '#e0e0e0';
+                fileUploadArea.style.background = '';
+                
+                if (e.dataTransfer.files.length > 0) {
+                    handleFileUpload(e.dataTransfer.files[0]);
+                }
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0]);
+                }
+            });
+            
+            function handleFileUpload(file) {
+                if (file.type !== 'text/plain') {
+                    alert('请上传TXT文件');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedFileContent = e.target.result;
+                    uploadedFileName.textContent = file.name;
+                    uploadedFileContainer.style.display = 'block';
+                };
+                reader.readAsText(file);
+            }
+            
+            removeFileBtn.addEventListener('click', () => {
+                uploadedFileContent = '';
+                uploadedFileContainer.style.display = 'none';
+                fileInput.value = '';
+            });
+            
+            // 聊天记录导入功能
+            const chatImportArea = document.getElementById('chat-import-area');
+            const chatImportInput = document.getElementById('chat-import-input');
+            const importedChatContainer = document.getElementById('imported-chat-container');
+            const importedChatName = document.getElementById('imported-chat-name');
+            const removeImportedChatBtn = document.getElementById('remove-imported-chat-btn');
+            let importedChatContent = '';
+            
+            chatImportArea.addEventListener('click', () => {
+                chatImportInput.click();
+            });
+            
+            chatImportArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                chatImportArea.style.borderColor = '#4facfe';
+                chatImportArea.style.background = 'rgba(79, 172, 254, 0.2)';
+            });
+            
+            chatImportArea.addEventListener('dragleave', () => {
+                chatImportArea.style.borderColor = '#e0e0e0';
+                chatImportArea.style.background = '';
+            });
+            
+            chatImportArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                chatImportArea.style.borderColor = '#e0e0e0';
+                chatImportArea.style.background = '';
+                
+                if (e.dataTransfer.files.length > 0) {
+                    handleChatImport(e.dataTransfer.files[0]);
+                }
+            });
+            
+            chatImportInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleChatImport(e.target.files[0]);
+                }
+            });
+            
+            function handleChatImport(file) {
+                if (file.type !== 'text/plain') {
+                    alert('请上传TXT格式的聊天记录');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    importedChatContent = e.target.result;
+                    importedChatName.textContent = file.name;
+                    importedChatContainer.style.display = 'block';
+                };
+                reader.readAsText(file);
+            }
+            
+            removeImportedChatBtn.addEventListener('click', () => {
+                importedChatContent = '';
+                importedChatContainer.style.display = 'none';
+                chatImportInput.value = '';
+            });
+            
+            // 小说生成器参考资料上传功能
+            const novelReferenceUpload = document.getElementById('novel-reference-upload');
+            const referenceFileInput = document.getElementById('reference-file-input');
+            const referenceFileContainer = document.getElementById('reference-file-container');
+            const referenceFileName = document.getElementById('reference-file-name');
+            const removeReferenceFileBtn = document.getElementById('remove-reference-file-btn');
+            let referenceFileContent = '';
+            
+            novelReferenceUpload.addEventListener('click', () => {
+                referenceFileInput.click();
+            });
+            
+            novelReferenceUpload.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                novelReferenceUpload.style.borderColor = '#4facfe';
+                novelReferenceUpload.style.background = 'rgba(79, 172, 254, 0.2)';
+            });
+            
+            novelReferenceUpload.addEventListener('dragleave', () => {
+                novelReferenceUpload.style.borderColor = '#e0e0e0';
+                novelReferenceUpload.style.background = '';
+            });
+            
+            novelReferenceUpload.addEventListener('drop', (e) => {
+                e.preventDefault();
+                novelReferenceUpload.style.borderColor = '#e0e0e0';
+                novelReferenceUpload.style.background = '';
+                
+                if (e.dataTransfer.files.length > 0) {
+                    handleReferenceFileUpload(e.dataTransfer.files[0]);
+                }
+            });
+            
+            referenceFileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleReferenceFileUpload(e.target.files[0]);
+                }
+            });
+            
+            function handleReferenceFileUpload(file) {
+                if (file.type !== 'text/plain') {
+                    alert('请上传TXT文件');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    referenceFileContent = e.target.result;
+                    referenceFileName.textContent = file.name;
+                    referenceFileContainer.style.display = 'block';
+                };
+                reader.readAsText(file);
+            }
+            
+            removeReferenceFileBtn.addEventListener('click', () => {
+                referenceFileContent = '';
+                referenceFileContainer.style.display = 'none';
+                referenceFileInput.value = '';
+            });
+            
+            // 连接按钮功能
+            const connectBtn = document.getElementById('connect-btn');
+            const loginPage = document.getElementById('login-page');
+            const chatPage = document.getElementById('chat-page');
+            const backBtn = document.getElementById('back-btn');
+            const modelSelect = document.getElementById('model-select');
+            const modelInfo = document.getElementById('model-info');
+            const characterName = document.getElementById('character-name');
+            const chatTitle = document.getElementById('chat-title');
+            const normalChatInterface = document.getElementById('normal-chat-interface');
+            const novelGeneratorInterface = document.getElementById('novel-generator-interface');
+            const magicCircle = document.getElementById('magic-circle');
+            const connectionInfo = document.getElementById('connection-info');
+            const connectionInfoText = document.getElementById('connection-info-text');
+            
+            // 根据选择的模型更新聊天界面
+            function updateChatInterface() {
+                const selectedModel = modelSelect.value;
+                
+                // 更新模型信息显示
+                switch(selectedModel) {
+                    case 'huihui_ai/deepseek-r1-abliterated:7b':
+                        modelInfo.textContent = '当前模型: DeepSeek R1 Abliterated (7B)';
+                        characterName.textContent = 'AI';
+                        chatTitle.textContent = 'Ollama聊天室';
+                        // 显示普通聊天界面，隐藏小说生成器界面
+                        normalChatInterface.style.display = 'flex';
+                        novelGeneratorInterface.style.display = 'none';
+                        magicCircle.style.display = 'none';
+                        break;
+                    case 'huihui_ai/deepseek-r1-abliterated:8b':
+                        modelInfo.textContent = '当前模型: DeepSeek R1 Abliterated (8B)';
+                        characterName.textContent = 'AI';
+                        chatTitle.textContent = 'Ollama聊天室';
+                        normalChatInterface.style.display = 'flex';
+                        novelGeneratorInterface.style.display = 'none';
+                        magicCircle.style.display = 'none';
+                        break;
+                    case 'rikka':
+                        modelInfo.textContent = '当前模型: 六花 (Rikka)';
+                        characterName.textContent = '六花';
+                        chatTitle.textContent = '六花聊天室';
+                        document.querySelector('.chat-container').classList.add('rikka-theme');
+                        document.querySelector('.chat-container').classList.remove('lilith-theme');
+                        normalChatInterface.style.display = 'flex';
+                        novelGeneratorInterface.style.display = 'none';
+                        magicCircle.style.display = 'block';
+                        // 设置六花的欢迎消息
+                        setRikkaWelcomeMessage();
+                        break;
+                    case 'lilith':
+                        modelInfo.textContent = '当前模型: Lilith';
+                        characterName.textContent = 'Lilith';
+                        chatTitle.textContent = 'Lilith聊天室';
+                        document.querySelector('.chat-container').classList.add('lilith-theme');
+                        document.querySelector('.chat-container').classList.remove('rikka-theme');
+                        normalChatInterface.style.display = 'flex';
+                        novelGeneratorInterface.style.display = 'none';
+                        magicCircle.style.display = 'none';
+                        break;
+                    case 'novel-writer':
+                        modelInfo.textContent = '当前模型: 小说生成器';
+                        characterName.textContent = '作家';
+                        chatTitle.textContent = '小说生成器';
+                        document.querySelector('.chat-container').classList.remove('rikka-theme', 'lilith-theme');
+                        // 显示小说生成器界面，隐藏普通聊天界面
+                        normalChatInterface.style.display = 'none';
+                        novelGeneratorInterface.style.display = 'flex';
+                        magicCircle.style.display = 'none';
+                        break;
+                }
+            }
+            
+            // 设置六花的欢迎消息
+            function setRikkaWelcomeMessage() {
+                const chatMessages = document.getElementById('chat-messages');
+                chatMessages.innerHTML = `
+                    <div class="system-message">
+                        欢迎来到六花聊天室！请输入消息开始对话。
+                    </div>
+                    <div class="ai-message message">
+                        <div class="message-sender"><i class="fas fa-magic"></i> 六花</div>
+                        <div class="message-content">你好！我是六花。如果你有任何问题，请随时问我哦～ ✨</div>
+                        <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                    </div>
+                `;
+            }
+            
+            // 测试API连接
+            async function testApiConnection() {
+                const ollamaUrl = document.getElementById('ollama-url').value;
+                const password = document.getElementById('access-password').value;
+                
+                // 密码验证
+                if (password !== '090213') {
+                    showErrorDialog('密码错误', '输入的密码不正确，请重新确认。');
+                    connectBtn.innerHTML = '<i class="fas fa-plug"></i> 连接到Ollama';
+                    connectBtn.disabled = false;
+                    return;
+                }
+                
+                // 更新连接状态
+                connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 连接中...';
+                connectBtn.disabled = true;
+                
+                // 显示连接信息
+                connectionInfo.style.display = 'block';
+                connectionInfoText.textContent = '正在连接到Ollama服务器...';
+                connectionInfo.className = 'connection-info';
+                
+                try {
+                    // 发送真实的API请求
+                    const response = await fetch(`${ollamaUrl}/api/tags`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP错误! 状态: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // 连接成功
+                    loginPage.style.display = 'none';
+                    chatPage.style.display = 'flex';
+                    
+                    // 根据选择的模型更新聊天界面
+                    updateChatInterface();
+                    
+                    // 更新连接状态
+                    document.getElementById('connection-status').classList.add('connected');
+                    document.getElementById('connection-status').classList.remove('reconnecting');
+                    document.getElementById('status-text').textContent = '已连接';
+                    
+                    // 显示成功信息
+                    connectionInfoText.textContent = '连接成功！';
+                    connectionInfo.className = 'connection-info success';
+                    
+                } catch (error) {
+                    console.error('连接失败:', error);
+                    
+                    // 显示错误信息
+                    connectionInfoText.textContent = `连接失败: ${error.message}`;
+                    connectionInfo.className = 'connection-info error';
+                    
+                    // 显示错误对话框
+                    showErrorDialog('连接到API失败', 
+                                  `错误信息: ${error.message}<br><br>
+                                   请检查以下内容：<br>
+                                   - Ollama服务器是否已启动（在终端运行 <code>ollama serve</code>）<br>
+                                   - 服务器地址"${ollamaUrl}"是否正确<br>
+                                   - 网络连接或CORS策略问题`);
+                } finally {
+                    // 恢复按钮状态
+                    connectBtn.innerHTML = '<i class="fas fa-plug"></i> 连接到Ollama';
+                    connectBtn.disabled = false;
+                    
+                    // 3秒后隐藏连接信息
+                    setTimeout(() => {
+                        connectionInfo.style.display = 'none';
+                    }, 3000);
+                }
+            }
+            
+            connectBtn.addEventListener('click', testApiConnection);
+            
+            backBtn.addEventListener('click', function() {
+                chatPage.style.display = 'none';
+                loginPage.style.display = 'block';
+            });
+            
+            // 显示错误对话框
+            function showErrorDialog(title, message) {
+                const errorDialog = document.getElementById('error-dialog');
+                const errorMessage = document.getElementById('error-message');
+                const overlay = document.getElementById('overlay');
+                
+                errorDialog.querySelector('h3').textContent = title;
+                errorMessage.innerHTML = message.replace(/\n/g, '<br>');
+                
+                errorDialog.style.display = 'block';
+                overlay.style.display = 'block';
+            }
+            
+            // 关闭错误对话框
+            function closeErrorDialog() {
+                const errorDialog = document.getElementById('error-dialog');
+                const overlay = document.getElementById('overlay');
+                
+                errorDialog.style.display = 'none';
+                overlay.style.display = 'none';
+            }
+            
+            // 重试按钮
+            document.getElementById('retry-btn').addEventListener('click', function() {
+                closeErrorDialog();
+                testApiConnection();
+            });
+            
+            // 设置更改按钮
+            document.getElementById('settings-btn').addEventListener('click', function() {
+                closeErrorDialog();
+                // 打开连接设置的手风琴
+                accordions[0].click();
+            });
+            
+            // 生成小说按钮功能
+            const generateNovelBtn = document.getElementById('generate-novel-btn');
+            const clearNovelBtn = document.getElementById('clear-novel-btn');
+            const novelPrompt = document.getElementById('novel-prompt');
+            const wordCount = document.getElementById('word-count');
+            const novelOutputArea = document.getElementById('novel-output-area');
+            
+            generateNovelBtn.addEventListener('click', function() {
+                const prompt = novelPrompt.value.trim();
+                const count = wordCount.value;
+                
+                if (!prompt) {
+                    alert('请输入小说提示');
+                    return;
+                }
+                
+                // 显示生成中状态
+                document.getElementById('typing-indicator').style.display = 'inline-flex';
+                
+                // 模拟小说生成
+                setTimeout(() => {
+                    // 隐藏生成中状态
+                    document.getElementById('typing-indicator').style.display = 'none';
+                    
+                    // 创建小说内容消息
+                    const novelContent = `根据您的提示，生成了大约${count}字的小说：\n\n「${prompt}」\n\n这是基于此提示的小说内容。在这个故事中，探索未知的世界，主人公经历了一系列的冒险和挑战...（此处省略全文）`;
+                    
+                    // 添加到输出区域
+                    const novelMessage = document.createElement('div');
+                    novelMessage.className = 'ai-message message';
+                    novelMessage.innerHTML = `
+                        <div class="message-sender">小说生成器</div>
+                        <div class="message-content">${novelContent.replace(/\n/g, '<br>')}</div>
+                        <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                    `;
+                    novelOutputArea.appendChild(novelMessage);
+                    
+                    // 滚动到底部
+                    novelOutputArea.scrollTop = novelOutputArea.scrollHeight;
+                }, 2000);
+            });
+            
+            clearNovelBtn.addEventListener('click', function() {
+                novelPrompt.value = '';
+                wordCount.value = 1000;
+                referenceFileContent = '';
+                referenceFileContainer.style.display = 'none';
+                referenceFileInput.value = '';
+                novelOutputArea.innerHTML = `
+                    <div class="system-message">
+                        欢迎使用小说生成器！请输入提示并设置参数，然后单击生成按钮开始创作。
+                    </div>
+                `;
+            });
+            
+            // 创建梦幻粒子效果
+            function createDreamyParticles() {
+                const dreamyEffect = document.getElementById('dreamy-effect');
+                const particleCount = 50;
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'dreamy-particle';
+                    
+                    // 随机大小
+                    const size = Math.random() * 100 + 20;
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    
+                    // 随机位置
+                    particle.style.left = `${Math.random() * 100}%`;
+                    particle.style.top = `${Math.random() * 100}%`;
+                    
+                    // 随机颜色（紫色系）
+                    const hue = Math.random() * 30 + 270; // 270-300色相，对应紫色
+                    particle.style.backgroundColor = `hsl(${hue}, 70%, 60%)`;
+                    
+                    // 随机动画延迟和持续时间
+                    const delay = Math.random() * 10;
+                    const duration = Math.random() * 20 + 10;
+                    particle.style.animationDelay = `${delay}s`;
+                    particle.style.animationDuration = `${duration}s`;
+                    
+                    dreamyEffect.appendChild(particle);
+                }
+            }
+            
+            // 创建樱花花瓣
+            function createSakuraPetals() {
+                const petalCount = 30;
+                
+                for (let i = 0; i < petalCount; i++) {
+                    const petal = document.createElement('div');
+                    petal.className = 'sakura-petal';
+                    
+                    // 随机大小
+                    const size = Math.random() * 10 + 5;
+                    petal.style.width = `${size}px`;
+                    petal.style.height = `${size}px`;
+                    
+                    // 随机位置
+                    petal.style.left = `${Math.random() * 100}%`;
+                    petal.style.top = `-${size}px`;
+                    
+                    // 随机旋转
+                    petal.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    
+                    // 随机动画延迟和持续时间
+                    const delay = Math.random() * 10;
+                    const duration = Math.random() * 20 + 10;
+                    petal.style.animationDelay = `${delay}s`;
+                    petal.style.animationDuration = `${duration}s`;
+                    
+                    document.body.appendChild(petal);
+                }
+            }
+            
+            // 消息发送功能
+            const sendBtn = document.getElementById('send-btn');
+            const userInput = document.getElementById('user-input');
+            const chatMessages = document.getElementById('chat-messages');
+            
+            sendBtn.addEventListener('click', sendMessage);
+            
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            async function sendMessage() {
+                const messageText = userInput.value.trim();
+                if (!messageText) return;
+                
+                // 添加用户消息
+                const userMessage = document.createElement('div');
+                userMessage.className = 'user-message message';
+                userMessage.innerHTML = `
+                    <div class="message-sender"><i class="fas fa-user"></i> 你</div>
+                    <div class="message-content">${messageText}</div>
+                    <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                `;
+                chatMessages.appendChild(userMessage);
+                
+                // 清空输入框
+                userInput.value = '';
+                // 滚动到底部
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // 显示输入中状态
+                document.getElementById('typing-indicator').style.display = 'inline-flex';
+                
+                // API连接检查
+                if (!document.getElementById('connection-status').classList.contains('connected')) {
+                    // 未连接时显示错误
+                    setTimeout(() => {
+                        document.getElementById('typing-indicator').style.display = 'none';
+                        
+                        const errorMessage = document.createElement('div');
+                        errorMessage.className = 'error-message message';
+                        errorMessage.innerHTML = `
+                            <div class="message-sender"><i class="fas fa-exclamation-circle"></i> 错误</div>
+                            <div class="message-content">未连接到API，请检查连接。</div>
+                            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                        `;
+                        chatMessages.appendChild(errorMessage);
+                        
+                        // 更新连接状态
+                        document.getElementById('connection-status').classList.remove('connected');
+                        document.getElementById('connection-status').classList.add('reconnecting');
+                        document.getElementById('status-text').textContent = '重新连接中...';
+                        
+                        // 自动尝试重新连接
+                        setTimeout(testApiConnection, 3000);
+                        
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }, 1000);
+                    return;
+                }
+                
+                try {
+                    // 获取Ollama URL和模型
+                    const ollamaUrl = document.getElementById('ollama-url').value;
+                    const model = modelSelect.value;
+                    
+                    // 构建请求数据
+                    const requestData = {
+                        model: model,
+                        prompt: messageText,
+                        stream: false
+                    };
+                    
+                    // 发送请求到Ollama生成API
+                    const response = await fetch(`${ollamaUrl}/api/generate`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`生成请求失败! 状态: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // 隐藏输入中状态
+                    document.getElementById('typing-indicator').style.display = 'none';
+                    
+                    // 使用API返回的响应
+                    let aiResponse = data.response;
+                    
+                    // 过滤掉思考过程
+                    aiResponse = aiResponse.replace(/Thinking\.\.\..*?done thinking\./gs, '');
+                    aiResponse = aiResponse.replace(/<think>.*?<\/think>/gs, '');
+                    
+                    // 添加AI消息
+                    const aiMessage = document.createElement('div');
+                    aiMessage.className = 'ai-message message';
+                    aiMessage.innerHTML = `
+                        <div class="message-sender"><i class="fas fa-magic"></i> ${characterName.textContent}</div>
+                        <div class="message-content">${aiResponse}</div>
+                        <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                    `;
+                    chatMessages.appendChild(aiMessage);
+                    
+                    // 滚动到底部
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    
+                } catch (error) {
+                    console.error('生成错误:', error);
+                    document.getElementById('typing-indicator').style.display = 'none';
+                    
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'error-message message';
+                    errorMessage.innerHTML = `
+                        <div class="message-sender"><i class="fas fa-exclamation-circle"></i> 错误</div>
+                        <div class="message-content">AI响应生成失败: ${error.message}</div>
+                        <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                    `;
+                    chatMessages.appendChild(errorMessage);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            }
+            
+            // 清除聊天记录
+            document.getElementById('clear-chat-btn').addEventListener('click', function() {
+                if (modelSelect.value === 'rikka') {
+                    chatMessages.innerHTML = `
+                        <div class="system-message">
+                            欢迎来到六花聊天室！请输入消息开始对话。
+                        </div>
+                        <div class="ai-message message">
+                            <div class="message-sender"><i class="fas fa-magic"></i> 六花</div>
+                            <div class="message-content">聊天记录已清除！让我们重新开始对话吧～ ✨</div>
+                            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                        </div>
+                    `;
+                } else {
+                    chatMessages.innerHTML = `
+                        <div class="system-message">
+                            欢迎来到Ollama聊天室！请输入消息开始对话。
+                        </div>
+                    `;
+                }
+            });
+            
+            // 导出聊天记录
+            document.getElementById('export-chat-btn').addEventListener('click', function() {
+                let chatText = "Ollama聊天记录\n";
+                chatText += "生成时间: " + new Date().toLocaleString() + "\n";
+                chatText += "模型: " + modelInfo.textContent.replace("当前模型: ", "") + "\n\n";
+                
+                const messages = document.querySelectorAll('.message');
+                messages.forEach(msg => {
+                    if (msg.classList.contains('system-message')) return;
+                    
+                    const sender = msg.querySelector('.message-sender').textContent;
+                    const content = msg.querySelector('.message-content').textContent;
+                    const time = msg.querySelector('.message-time').textContent;
+                    
+                    chatText += `[${time}] ${sender}: ${content}\n\n`;
+                });
+                
+                // 创建下载链接
+                const blob = new Blob([chatText], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ollama_chat_${new Date().getTime()}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        });
+    </script>
+</body>
+</html>
