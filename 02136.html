@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama聊天室 | by dsb</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #a855f7;
+            --secondary: #c084fc;
+            --accent: #ec4899;
+            --light: rgba(249, 249, 249, 0.7);
+            --dark: #333;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+            
+            /* 梦幻紫色调色板 */
+            --dream-purple-1: #a855f7;
+            --dream-purple-2: #c084fc;
+            --dream-purple-3: #d8b4fe;
+            --dream-purple-4: #e9d5ff;
+            --dream-pink: #ec4899;
+            --dream-blue: #818cf8;
+            
+            /* 透明紫色背景 */
+            --transparent-purple: rgba(168, 85, 247, 0.15);
+            --transparent-purple-dark: rgba(126, 34, 206, 0.2);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans JP', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #7e22ce, #4c1d95);
+        }
+        
+        /* 背景视频容器 */
+        .background-video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+            overflow: hidden;
+        }
+        
+        .background-video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translateX(-50%) translateY(-50%);
+            object-fit: cover;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 600px;
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+            background: rgba(79, 70, 229, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1;
+        }
+        
+        .chat-container {
+            width: 100%;
+            max-width: 1000px;
+            height: 90vh;
+            border-radius: 15px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            display: none;
+            background: rgba(79, 70, 229, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            margin: 20px;
+        }
+        
+        /* Rikka主题 */
+        .rikka-theme {
+            --primary: #c084fc;
+            --secondary: #e9d5ff;
+            --accent: #ec4899;
+            --header-bg: linear-gradient(135deg, var(--dream-purple-1), var(--dream-pink));
+            --message-user: linear-gradient(135deg, var(--dream-purple-1), var(--dream-pink));
+            --message-ai: linear-gradient(135deg, var(--dream-purple-3), var(--dream-blue));
+            --button-bg: linear-gradient(135deg, var(--dream-purple-1), var(--dream-pink));
+            --status-bg: linear-gradient(135deg, var(--dream-purple-1), var(--dream-pink));
+        }
+        
+        /* Lilith主题 */
+        .lilith-theme {
+            --primary: #a855f7;
+            --secondary: #d8b4fe;
+            --accent: #f472b6;
+            --header-bg: linear-gradient(135deg, #7e22ce, #c084fc);
+            --message-user: linear-gradient(135deg, #7e22ce, #c084fc);
+            --message-ai: linear-gradient(135deg, #d8b4fe, #f472b6);
+            --button-bg: linear-gradient(135deg, #7e22ce, #c084fc);
+            --status-bg: linear-gradient(135deg, #7e22ce, #c084fc);
+        }
+        
+        .header {
+            padding: 20px;
+            position: relative;
+            text-align: center;
+            background: var(--header-bg, linear-gradient(to right, var(--primary), var(--secondary)));
+            color: white;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .brand {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 16px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+        }
+        
+        .brand i {
+            margin-right: 8px;
+        }
+        
+        .character {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin: 0;
+            padding: 10px 0;
+        }
+        
+        .header p {
+            margin: 5px 0 0;
+            opacity: 0.8;
+            font-size: 14px;
+        }
+        
+        .config-section {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .accordion {
+            cursor: pointer;
+            padding: 15px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .accordion:hover {
+            opacity: 0.9;
+        }
+        
+        .accordion.active {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        
+        .panel {
+            padding: 0 18px;
+            background-color: rgba(255, 255, 255, 0.1);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .panel-content {
+            padding: 15px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        input, select, button, textarea {
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+        
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        button {
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button.connected {
+            background: linear-gradient(to right, var(--success), rgba(90, 180, 101, 0.8));
+        }
+        
+        button.error {
+            background: linear-gradient(to right, var(--error), rgba(215, 92, 127, 0.8));
+        }
+        
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .message {
+            padding: 15px 20px;
+            border-radius: 15px;
+            max-width: 90%;
+            line-height: 1.5;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: fadeIn 0.3s ease;
+            background: var(--transparent-purple);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+            background: var(--message-user, linear-gradient(to right, var(--primary), var(--secondary)));
+            color: white;
+        }
+        
+        .ai-message {
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            background: var(--message-ai, linear-gradient(to right, var(--dream-purple-3), var(--dream-blue)));
+            color: white;
+        }
+        
+        .system-message {
+            background: rgba(255, 255, 255, 0.1);
+            align-self: center;
+            max-width: 90%;
+            text-align: center;
+            font-style: italic;
+            color: #fff;
+        }
+        
+        .error-message {
+            background: linear-gradient(to right, var(--error), rgba(215, 92, 127, 0.6));
+            align-self: center;
+            max-width: 90%;
+            color: white;
+        }
+        
+        .message-sender {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 5px;
+            text-align: right;
+        }
+        
+        .message-input-container {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .input-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        #user-input {
+            flex: 1;
+            margin-right: 0;
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            resize: vertical;
+        }
+        
+        #user-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        #send-btn {
+            background: var(--button-bg, linear-gradient(to right, var(--primary), var(--secondary)));
+            width: auto;
+            padding: 12px 20px;
+            color: white;
+        }
+        
+        #send-btn:hover {
+            background: linear-gradient(to right, #57c1e8, #4facfe);
+        }
+        
+        .file-upload-btn {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            width: auto;
+            padding: 12px 15px;
+            color: white;
+        }
+        
+        .file-upload-btn:hover {
+            background: linear-gradient(to right, #57c1e8, #4facfe);
+        }
+        
+        .status-bar {
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            background: var(--status-bg, linear-gradient(to right, var(--primary), var(--secondary)));
+            color: white;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ccc;
+            box-shadow: 0 0 5px #ccc;
+        }
+        
+        .status-dot.connected {
+            background: var(--success);
+            box-shadow: 0 0 5px var(--success);
+        }
+        
+        .contact-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: currentColor;
+            opacity: 0.6;
+            animation: typingAnimation 1.4s infinite;
+        }
+        
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typingAnimation {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* 密码输入区域样式 */
+        .password-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 40px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: auto;
+            padding: 0;
+            font-size: 18px;
+            color: #fff;
+        }
+        
+        /* 响应时间滑块样式 */
+        .slider-container {
+            margin-top: 10px;
+        }
+        
+        .slider-value {
+            text-align: center;
+            margin-top: 5px;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+        
+        @media (max-width: 600px) {
+            .login-container {
+                height: auto;
+                border-radius: 15px;
+            }
+            
+            .chat-container {
+                border-radius: 0;
+                height: 100vh;
+                max-width: 100%;
+                margin: 0;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .brand {
+                font-size: 14px;
+            }
+            
+            .config-section {
+                padding: 15px;
+            }
+            
+            .message {
+                max-width: 95%;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+        
+        /* 文件上传区域 */
+        .file-upload-area {
+            margin-top: 15px;
+            padding: 15px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .file-upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(79, 172, 254, 0.1);
+        }
+        
+        .file-upload-area i {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .file-upload-area p {
+            margin: 0;
+            font-size: 14px;
+            color: #fff;
+        }
+        
+        .uploaded-file {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(79, 172, 254, 0.1);
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .uploaded-file .file-name {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #fff;
+        }
+        
+        .uploaded-file .remove-file {
+            background: none;
+            border: none;
+            color: #ff4757;
+            cursor: pointer;
+            width: auto;
+            padding: 5px;
+            font-size: 16px;
+        }
+        
+        /* 聊天控制按钮 */
+        .chat-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .chat-control-btn {
+            flex: 1;
+            padding: 10px;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .chat-control-btn:hover {
+            opacity: 0.9;
+        }
+        
+        /* 梦幻效果增强 */
+        .dreamy-effect {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .dreamy-particle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 15s infinite linear;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        /* 小说生成器特定样式 */
+        .novel-panel {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .novel-panel h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .novel-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .novel-control-btn {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(to right, #8e44ad, #9b59b6);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .novel-control-btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景视频容器 -->
+    <div class="background-video-container">
+        <video class="background-video" autoplay muted loop id="bg-video">
+            <source src="1.mp4" type="video/mp4">
+            您的浏览器不支持视频背景
+        </video>
+    </div>
+    
+    <!-- 梦幻粒子效果 -->
+    <div class="dreamy-effect" id="dreamy-effect"></div>
+    
+    <!-- 连接页面 -->
+    <div class="login-container" id="login-page">
+        <div class="header">
+            <div class="brand">
+                <i class="fas fa-magic"></i> by dsb
+            </div>
+            <h1>Ollama聊天室</h1>
+            <p>与AI助手对话</p>
+        </div>
+        
+        <div class="config-section">
+            <button class="accordion">
+                <span><i class="fas fa-cog"></i> 连接设置</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="panel">
+                <div class="panel-content">
+                    <div class="input-group">
+                        <label for="ollama-url">Ollama 服务器地址</label>
+                        <input type="text" id="ollama-url" value="http://localhost:11434" placeholder="例: http://localhost:11434">
+                    </div>
+                    
+                    <!-- 密码输入区域 -->
+                    <div class="password-group">
+                        <label for="access-password">访问密码</label>
+                        <input type="password" id="access-password" placeholder="请输入访问密码">
+                        <button type="button" class="password-toggle" id="toggle-access-password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="accordion">
+                <span><i class="fas fa-robot"></i> 模型设置</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="panel">
+                <div class="panel-content">
+                    <div class="input-group">
+                        <label for="model-select">模型选择</label>
+                        <select id="model-select">
+                            <option value="huihui_ai/deepseek-r1-abliterated:7b">DeepSeek R1 Abliterated (7B)</option>
+                            <option value="huihui_ai/deepseek-r1-abliterated:8b">DeepSeek R1 Abliterated (8B)</option>
+                            <option value="rikka">六花 (Rikka)</option>
+                            <option value="lilith">Lilith</option>
+                            <option value="novel-writer">小说生成器</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="temperature">温度值 (0.0-1.0)</label>
+                        <input type="number" id="temperature" min="0" max="1" step="0.1" value="0.7">
+                    </div>
+                    
+                    <!-- 响应时间设置 -->
+                    <div class="input-group">
+                        <label for="response-time">响应时间 (秒)</label>
+                        <input type="range" id="response-time" class="slider" min="1" max="3600" value="30">
+                        <div class="slider-value" id="response-time-value">30秒</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 小说生成器设置 -->
+            <button class="accordion">
+                <span><i class="fas fa-book"></i> 小说生成器设置</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="panel">
+                <div class="panel-content">
+                    <div class="input-group">
+                        <label for="novel-prompt">提示词</label>
+                        <textarea id="novel-prompt" rows="3" placeholder="请输入小说生成提示词，例如：写一个关于未来世界的故事..."></textarea>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="word-count">生成字数</label>
+                        <input type="number" id="word-count" min="100" max="5000" step="100" value="1000">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="reference-content">参考内容 (可选)</label>
+                        <textarea id="reference-content" rows="3" placeholder="可提供参考内容，如已有章节或设定..."></textarea>
+                    </div>
+                    
+                    <div class="novel-controls">
+                        <button class="novel-control-btn" id="generate-novel-btn">
+                            <i class="fas fa-feather"></i> 生成小说
+                        </button>
+                        <button class="novel-control-btn" id="clear-novel-btn">
+                            <i class="fas fa-trash"></i> 清空
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 文件上传区域 -->
+            <div class="file-upload-area" id="file-upload-area">
+                <i class="fas fa-file-upload"></i>
+                <p>点击或拖拽文件到此区域上传TXT文件</p>
+                <input type="file" id="file-input" accept=".txt" style="display: none;">
+            </div>
+            
+            <div id="uploaded-file-container" style="display: none;">
+                <div class="uploaded-file">
+                    <span class="file-name" id="uploaded-file-name"></span>
+                    <button class="remove-file" id="remove-file-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 聊天记录导入区域 -->
+            <div class="file-upload-area" id="chat-import-area">
+                <i class="fas fa-history"></i>
+                <p>点击或拖拽聊天记录文件导入</p>
+                <input type="file" id="chat-import-input" accept=".txt" style="display: none;">
+            </div>
+            
+            <div id="imported-chat-container" style="display: none;">
+                <div class="uploaded-file">
+                    <span class="file-name" id="imported-chat-name"></span>
+                    <button class="remove-file" id="remove-imported-chat-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <button id="connect-btn" class="connect-btn">
+                <i class="fas fa-plug"></i> 连接到Ollama
+            </button>
+        </div>
+    </div>
+    
+    <!-- 聊天页面（默认隐藏） -->
+    <div class="chat-container" id="chat-page">
+        <div class="header">
+            <button class="back-btn" id="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="brand">
+                <i class="fas fa-magic"></i> by dsb
+            </div>
+            <div class="character" id="character-name">
+                AI
+            </div>
+            <h1 id="chat-title">Ollama聊天室</h1>
+            <p id="model-info">当前模型: DeepSeek R1 Abliterated (7B)</p>
+        </div>
+        
+        <div class="chat-area">
+            <div class="chat-messages" id="chat-messages">
+                <!-- 聊天消息会在这里动态添加 -->
+                <div class="system-message">
+                    欢迎使用Ollama聊天室！请输入消息开始对话。
+                </div>
+            </div>
+            
+            <div class="message-input-container">
+                <div class="input-actions">
+                    <textarea id="user-input" rows="3" placeholder="输入消息..."></textarea>
+                    <button class="file-upload-btn" id="chat-file-upload-btn">
+                        <i class="fas fa-file-upload"></i>
+                    </button>
+                    <button id="send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                
+                <!-- 聊天控制按钮 -->
+                <div class="chat-controls">
+                    <button class="chat-control-btn" id="export-chat-btn">
+                        <i class="fas fa-download"></i> 导出聊天记录
+                    </button>
+                    <button class="chat-control-btn" id="clear-chat-btn">
+                        <i class="fas fa-trash"></i> 清空聊天
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot" id="connection-status"></div>
+                <span id="status-text">未连接</span>
+            </div>
+            <div class="contact-info">
+                <span id="typing-indicator" style="display: none;">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span id="typing-text"> AI正在输入...</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 创建梦幻粒子效果
+            createDreamyParticles();
+            
+            // 手风琴效果
+            const accordions = document.querySelectorAll('.accordion');
+            accordions.forEach(accordion => {
+                accordion.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const panel = this.nextElementSibling;
+                    const icon = this.querySelector('.fa-chevron-down');
+                    
+                    if (panel.style.maxHeight) {
+                        panel.style.maxHeight = null;
+                        icon.style.transform = 'rotate(0deg)';
+                    } else {
+                        panel.style.maxHeight = panel.scrollHeight + 'px';
+                        icon.style.transform = 'rotate(180deg)';
+                    }
+                });
+            });
+            
+            // 默认打开第一个手风琴
+            if (accordions.length > 0) {
+                accordions[0].click();
+            }
+            
+            // 响应时间滑块
+            const responseTimeSlider = document.getElementById('response-time');
+            const responseTimeValue = document.getElementById('response-time-value');
+            
+            responseTimeSlider.addEventListener('input', function() {
+                responseTimeValue.textContent = this.value + '秒';
+            });
+            
+            // 密码显示/隐藏切换
+            const togglePassword = document.getElementById('toggle-access-password');
+            const passwordInput = document.getElementById('access-password');
+            
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // 切换图标
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+            
+            // 文件上传功能
+            const fileUploadArea = document.getElementById('file-upload-area');
+            const fileInput = document.getElementById('file-input');
+            const uploadedFileContainer = document.getElementById('uploaded-file-container');
+            const uploadedFileName = document.getElementById('uploaded-file-name');
+            const removeFileBtn = document.getElementById('remove-file-btn');
+            let uploadedFileContent = '';
+            
+            fileUploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            fileUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileUploadArea.style.borderColor = '#4facfe';
+                fileUploadArea.style.background = 'rgba(79, 172, 254, 0.2)';
+            });
+            
+            fileUploadArea.addEventListener('dragleave', () => {
+                fileUploadArea.style.borderColor = '#e0e0e0';
+                fileUploadArea.style.background = '';
+            });
+            
+            fileUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUploadArea.style.borderColor = '#e0e0e0';
+                fileUploadArea.style.background = '';
+                
+                if (e.dataTransfer.files.length > 0) {
+                    handleFileUpload(e.dataTransfer.files[0]);
+                }
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0]);
+                }
+            });
+            
+            function handleFileUpload(file) {
+                if (file.type !== 'text/plain') {
+                    alert('请上传TXT文件');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedFileContent = e.target.result;
+                    uploadedFileName.textContent = file.name;
+                    uploadedFileContainer.style.display = 'block';
+                };
+                reader.readAsText(file);
+            }
+            
+            removeFileBtn.addEventListener('click', () => {
+                uploadedFileContent = '';
+                uploadedFileContainer.style.display = 'none';
+                fileInput.value = '';
+            });
+            
+            // 聊天记录导入功能
+            const chatImportArea = document.getElementById('chat-import-area');
+            const chatImportInput = document.getElementById('chat-import-input');
+            const importedChatContainer = document.getElementById('imported-chat-container');
+            const importedChatName = document.getElementById('imported-chat-name');
+            const removeImportedChatBtn = document.getElementById('remove-imported-chat-btn');
+            let importedChatContent = '';
+            
+            chatImportArea.addEventListener('click', () => {
+                chatImportInput.click();
+            });
+            
+            chatImportArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                chatImportArea.style.borderColor = '#4facfe';
+                chatImportArea.style.background = 'rgba(79, 172, 254, 0.2)';
+            });
+            
+            chatImportArea.addEventListener('dragleave', () => {
+                chatImportArea.style.borderColor = '#e0e0e0';
+                chatImportArea.style.background = '';
+            });
+            
+            chatImportArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                chatImportArea.style.borderColor = '#e0e0e0';
+                chatImportArea.style.background = '';
+                
+                if (e.dataTransfer.files.length > 0) {
+                    handleChatImport(e.dataTransfer.files[0]);
+                }
+            });
+            
+            chatImportInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleChatImport(e.target.files[0]);
+                }
+            });
+            
+            function handleChatImport(file) {
+                if (file.type !== 'text/plain') {
+                    alert('请上传TXT格式的聊天记录');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    importedChatContent = e.target.result;
+                    importedChatName.textContent = file.name;
+                    importedChatContainer.style.display = 'block';
+                };
+                reader.readAsText(file);
+            }
+            
+            removeImportedChatBtn.addEventListener('click', () => {
+                importedChatContent = '';
+                importedChatContainer.style.display = 'none';
+                chatImportInput.value = '';
+            });
+            
+            // 聊天界面文件上传按钮
+            const chatFileUploadBtn = document.getElementById('chat-file-upload-btn');
+            const chatFileInput = document.createElement('input');
+            chatFileInput.type = 'file';
+            chatFileInput.accept = '.txt';
+            chatFileInput.style.display = 'none';
+            document.body.appendChild(chatFileInput);
+            
+            chatFileUploadBtn.addEventListener('click', () => {
+                chatFileInput.click();
+            });
+            
+            chatFileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0]);
+                    
+                    // 添加到聊天输入框
+                    const userInput = document.getElementById('user-input');
+                    userInput.value = `请分析以下文件内容：\n${uploadedFileContent.substring(0, 1000)}${uploadedFileContent.length > 1000 ? '...' : ''}`;
+                }
+            });
+            
+            // 连接按钮点击事件
+            const connectBtn = document.getElementById('connect-btn');
+            const loginPage = document.getElementById('login-page');
+            const chatPage = document.getElementById('chat-page');
+            const modelInfo = document.getElementById('model-info');
+            const connectionStatus = document.getElementById('connection-status');
+            const statusText = document.getElementById('status-text');
+            const chatTitle = document.getElementById('chat-title');
+            const characterName = document.getElementById('character-name');
+            const typingText = document.getElementById('typing-text');
+            
+            connectBtn.addEventListener('click', function() {
+                // 获取配置信息
+                const ollamaUrl = document.getElementById('ollama-url').value;
+                const password = document.getElementById('access-password').value;
+                const modelSelect = document.getElementById('model-select');
+                const model = modelSelect.value;
+                
+                // 简单验证
+                if (!ollamaUrl) {
+                    alert('请输入Ollama服务器地址');
+                    return;
+                }
+                
+                if (!password) {
+                    alert('请输入访问密码');
+                    return;
+                }
+                
+                // 根据模型设置界面
+                if (model === 'rikka') {
+                    chatTitle.textContent = '六花のOllamaチャットルーム';
+                    characterName.textContent = '六花';
+                    typingText.textContent = ' 六花が入力中...';
+                    
+                    // 应用Rikka主题
+                    chatPage.classList.remove('lilith-theme');
+                    chatPage.classList.add('rikka-theme');
+                } else if (model === 'lilith') {
+                    chatTitle.textContent = 'Lilith\'s Ollama Chatroom';
+                    characterName.textContent = 'Lilith';
+                    typingText.textContent = ' Lilith is typing...';
+                    
+                    // 应用Lilith主题
+                    chatPage.classList.remove('rikka-theme');
+                    chatPage.classList.add('lilith-theme');
+                } else if (model === 'novel-writer') {
+                    chatTitle.textContent = '小说生成器';
+                    characterName.textContent = '小说家';
+                    typingText.textContent = ' 正在创作中...';
+                    
+                    // 移除其他主题
+                    chatPage.classList.remove('rikka-theme', 'lilith-theme');
+                } else {
+                    chatTitle.textContent = 'Ollama聊天室';
+                    characterName.textContent = 'AI';
+                    typingText.textContent = ' AI正在输入...';
+                    
+                    // 移除主题
+                    chatPage.classList.remove('rikka-theme', 'lilith-theme');
+                }
+                
+                // 更新模型信息显示
+                const modelDisplayNames = {
+                    'huihui_ai/deepseek-r1-abliterated:7b': 'DeepSeek R1 Abliterated (7B)',
+                    'huihui_ai/deepseek-r1-abliterated:8b': 'DeepSeek R1 Abliterated (8B)',
+                    'rikka': '六花 (Rikka)',
+                    'lilith': 'Lilith',
+                    'novel-writer': '小说生成器'
+                };
+                
+                modelInfo.textContent = `当前模型: ${modelDisplayNames[model]}`;
+                
+                // 模拟连接过程
+                connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 连接中...';
+                connectBtn.disabled = true;
+                
+                // 模拟连接延迟
+                setTimeout(() => {
+                    // 切换到聊天页面
+                    loginPage.style.display = 'none';
+                    chatPage.style.display = 'flex';
+                    
+                    // 更新连接状态
+                    connectionStatus.classList.add('connected');
+                    statusText.textContent = '已连接: ' + ollamaUrl;
+                    
+                    // 重置连接按钮
+                    connectBtn.innerHTML = '<i class="fas fa-plug"></i> 连接到Ollama';
+                    connectBtn.disabled = false;
+                    
+                    // 如果有导入的聊天记录，加载它
+                    if (importedChatContent) {
+                        loadImportedChat(importedChatContent);
+                    } else {
+                        // 显示欢迎消息
+                        let welcomeMessage = '已连接到Ollama。开始对话吧！';
+                        if (model === 'rikka') {
+                            welcomeMessage = 'Ollamaに接続されました。会話を始めましょう！';
+                        } else if (model === 'lilith') {
+                            welcomeMessage = 'Connected to Ollama. Start a conversation!';
+                        } else if (model === 'novel-writer') {
+                            welcomeMessage = '小说生成器已就绪，请输入提示词开始创作！';
+                        }
+                        
+                        addMessageToChat('系统', welcomeMessage, 'system-message');
+                    }
+                }, 1500);
+            });
+            
+            // 创建梦幻粒子效果
+            function createDreamyParticles() {
+                const effectContainer = document.getElementById('dreamy-effect');
+                const colors = ['#a855f7', '#c084fc', '#d8b4fe', '#e9d5ff', '#ec4899', '#818cf8'];
+                
+                // 创建多个粒子
+                for (let i = 0; i < 20; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('dreamy-particle');
+                    
+                    // 随机设置粒子属性
+                    const size = Math.random() * 50 + 20;
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.background = color;
+                    particle.style.left = `${Math.random() * 100}vw`;
+                    particle.style.animationDuration = `${Math.random() * 10 + 10}s`;
+                    particle.style.animationDelay = `${Math.random() * 5}s`;
+                    
+                    effectContainer.appendChild(particle);
+                }
+            }
+            
+            // 加载导入的聊天记录
+            function loadImportedChat(content) {
+                try {
+                    const chatData = JSON.parse(content);
+                    
+                    // 清空当前聊天
+                    document.getElementById('chat-messages').innerHTML = '';
+                    chatHistory = [];
+                    
+                    // 添加导入的消息
+                    chatData.messages.forEach(msg => {
+                        addMessageToChat(msg.sender, msg.text, msg.type);
+                        
+                        // 添加到聊天历史
+                        if (msg.type === 'user-message') {
+                            chatHistory.push({ role: 'user', content: msg.text });
+                        } else if (msg.type === 'ai-message') {
+                            chatHistory.push({ role: 'assistant', content: msg.text });
+                        }
+                    });
+                    
+                    // 显示加载成功消息
+                    addMessageToChat('系统', '聊天记录已加载', 'system-message');
+                } catch (e) {
+                    console.error('解析聊天记录失败:', e);
+                    addMessageToChat('系统', '聊天记录加载失败，格式不正确', 'error-message');
+                    
+                    // 显示默认欢迎消息
+                    const model = document.getElementById('model-select').value;
+                    let welcomeMessage = '已连接到Ollama。开始对话吧！';
+                    if (model === 'rikka') {
+                        welcomeMessage = 'Ollamaに接続されました。会話を始めましょう！';
+                    } else if (model === 'lilith') {
+                        welcomeMessage = 'Connected to Ollama. Start a conversation!';
+                    } else if (model === 'novel-writer') {
+                        welcomeMessage = '小说生成器已就绪，请输入提示词开始创作！';
+                    }
+                    
+                    addMessageToChat('系统', welcomeMessage, 'system-message');
+                }
+            }
+            
+            // 返回按钮事件
+            document.getElementById('back-btn').addEventListener('click', function() {
+                chatPage.style.display = 'none';
+                loginPage.style.display = 'block';
+                
+                // 重置连接状态
+                connectionStatus.classList.remove('connected');
+                statusText.textContent = '未连接';
+                
+                // 清空聊天记录
+                document.getElementById('chat-messages').innerHTML = 
+                    '<div class="system-message">欢迎使用Ollama聊天室！请输入消息开始对话。</div>';
+                
+                // 重置聊天历史
+                chatHistory = [];
+                
+                // 移除主题
+                chatPage.classList.remove('rikka-theme', 'lilith-theme');
+            });
+            
+            // 导出聊天记录
+            document.getElementById('export-chat-btn').addEventListener('click', function() {
+                exportChatHistory();
+            });
+            
+            // 清空聊天
+            document.getElementById('clear-chat-btn').addEventListener('click', function() {
+                if (confirm('确定要清空聊天记录吗？')) {
+                    document.getElementById('chat-messages').innerHTML = 
+                        '<div class="system-message">聊天记录已清空</div>';
+                    chatHistory = [];
+                }
+            });
+            
+            // 导出聊天记录函数
+            function exportChatHistory() {
+                const messages = document.querySelectorAll('.message');
+                const chatData = {
+                    model: document.getElementById('model-select').value,
+                    exportDate: new Date().toISOString(),
+                    messages: []
+                };
+                
+                messages.forEach(msg => {
+                    const sender = msg.querySelector('.message-sender').textContent;
+                    const text = msg.querySelector('.message-content').textContent;
+                    const time = msg.querySelector('.message-time').textContent;
+                    
+                    let type = 'system-message';
+                    if (msg.classList.contains('user-message')) type = 'user-message';
+                    if (msg.classList.contains('ai-message')) type = 'ai-message';
+                    if (msg.classList.contains('error-message')) type = 'error-message';
+                    
+                    chatData.messages.push({
+                        sender,
+                        text,
+                        time,
+                        type
+                    });
+                });
+                
+                const dataStr = JSON.stringify(chatData, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const exportFileDefaultName = `chat-export-${new Date().getTime()}.txt`;
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+            }
+            
+            // 发送消息功能
+            const sendBtn = document.getElementById('send-btn');
+            const userInput = document.getElementById('user-input');
+            const chatMessages = document.getElementById('chat-messages');
+            const typingIndicator = document.getElementById('typing-indicator');
+            
+            // 聊天历史记录
+            let chatHistory = [];
+            
+            // 发送消息函数
+            async function sendMessage() {
+                const message = userInput.value.trim();
+                if (!message) return;
+                
+                // 获取当前模型
+                const model = document.getElementById('model-select').value;
+                
+                // 确定发送者名称
+                let senderName = '用户';
+                if (model === 'rikka') {
+                    senderName = '勇太';
+                } else if (model === 'lilith') {
+                    senderName = '失败的man';
+                } else if (model === 'novel-writer') {
+                    senderName = '作者';
+                }
+                
+                // 添加用户消息
+                addMessageToChat(senderName, message, 'user-message');
+                
+                // 将消息添加到历史记录
+                chatHistory.push({ role: 'user', content: message });
+                
+                // 如果有上传的文件内容，添加到消息中
+                if (uploadedFileContent) {
+                    chatHistory.push({ 
+                        role: 'user', 
+                        content: `文件内容：${uploadedFileContent.substring(0, 2000)}${uploadedFileContent.length > 2000 ? '...' : ''}` 
+                    });
+                }
+                
+                // 清空输入框
+                userInput.value = '';
+                
+                // 显示正在输入状态
+                typingIndicator.style.display = 'inline-flex';
+                
+                try {
+                    // 获取配置信息
+                    const ollamaUrl = document.getElementById('ollama-url').value;
+                    const temperature = parseFloat(document.getElementById('temperature').value);
+                    const responseTime = parseInt(document.getElementById('response-time').value) * 1000; // 转换为毫秒
+                    
+                    // 准备请求数据
+                    const requestData = {
+                        model: model,
+                        messages: chatHistory,
+                        options: {
+                            temperature: temperature
+                        },
+                        stream: false
+                    };
+                    
+                    // 设置超时
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), responseTime);
+                    
+                    // 发送请求到Ollama API
+                    const response = await fetch(`${ollamaUrl}/api/chat`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestData),
+                        signal: controller.signal
+                    });
+                    
+                    // 清除超时
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        throw new Error(`服务器错误: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // 隐藏正在输入状态
+                    typingIndicator.style.display = 'none';
+                    
+                    // 添加AI回复到聊天
+                    let aiResponse = data.message.content;
+                    
+                    // 增强过滤逻辑：移除所有思考内容
+                    // 使用正则表达式匹配各种可能的思考标记
+                    const thoughtPatterns = [
+                        /(思考|think):[\s\S]*?$/i, // 思考: 后面到结尾的内容
+                        /(\[思考\]|\[think\])[\s\S]*?$/i, // [思考] 后面到结尾的内容
+                        /(\(思考\)|\(think\))[\s\S]*?$/i, // (思考) 后面到结尾的内容
+                        /(内部思考|internal thought):[\s\S]*?$/i, // 内部思考: 后面到结尾的内容
+                        /Thinking\.[s\S]*?\.\.\.done thinking\./gi, // Thinking...到...done thinking.的内容
+                        /<think>[\s\S]*?<\/think>/gi // <think>标签内容
+                    ];
+                    
+                    thoughtPatterns.forEach(pattern => {
+                        aiResponse = aiResponse.replace(pattern, '');
+                    });
+                    
+                    // 根据模型类型生成不同风格的回复
+                    let aiName = 'AI';
+                    if (model === 'rikka') {
+                        aiName = '六花';
+                        aiResponse = generateRikkaResponse(aiResponse);
+                    } else if (model === 'lilith') {
+                        aiName = 'Lilith';
+                        aiResponse = generateLilithResponse(aiResponse);
+                    } else if (model === 'novel-writer') {
+                        aiName = '小说家';
+                        aiResponse = formatNovelResponse(aiResponse);
+                    }
+                    
+                    // 如果过滤后内容为空，添加提示
+                    if (!aiResponse.trim()) {
+                        aiResponse = "抱歉，我无法生成适当的回复。";
+                        if (model === 'rikka') {
+                            aiResponse = "申し訳ありませんが、適切な返答を生成できませんでした。";
+                        } else if (model === 'lilith') {
+                            aiResponse = "Sorry, I couldn't generate an appropriate response.";
+                        } else if (model === 'novel-writer') {
+                            aiResponse = "抱歉，我无法生成适当的小说内容。";
+                        }
+                    }
+                    
+                    addMessageToChat(aiName, aiResponse, 'ai-message');
+                    
+                    // 将AI回复添加到历史记录
+                    chatHistory.push({ role: 'assistant', content: aiResponse });
+                    
+                    // 清空上传的文件内容
+                    uploadedFileContent = '';
+                    uploadedFileContainer.style.display = 'none';
+                    
+                } catch (error) {
+                    // 隐藏正在输入状态
+                    typingIndicator.style.display = 'none';
+                    
+                    // 显示错误消息
+                    let errorMessage = '请求失败: ';
+                    if (error.name === 'AbortError') {
+                        errorMessage += '响应超时。请增加响应时间或检查服务器连接';
+                    } else {
+                        errorMessage += error.message;
+                    }
+                    
+                    if (model === 'rikka') {
+                        errorMessage = 'リクエスト失敗: 応答がタイムアウトしました。応答時間を増やすかサーバー接続を確認してください';
+                    } else if (model === 'lilith') {
+                        errorMessage = 'Request failed: Response timeout. Please increase response time or check server connection';
+                    } else if (model === 'novel-writer') {
+                        errorMessage = '请求失败: 响应超时。请增加响应时间或检查服务器连接';
+                    }
+                    
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message message';
+                    errorDiv.textContent = errorMessage;
+                    chatMessages.appendChild(errorDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            }
+            
+            // 生成六花风格的回复
+            function generateRikkaResponse(response) {
+                const rikkaPhrases = [
+                    "邪王真眼は最強です！",
+                    "これは不可視境界線の力...",
+                    "私の邪王真眼が真実を見た！",
+                    "これはダークセイクリッドに記された秘術...",
+                    "邪王真眼の名において、私は宣言する...",
+                    "これは不可視境界線からの啓示...",
+                    "闇の力が私を導いている...",
+                    "私の邪王真眼が騒ぎだしている..."
+                ];
+                
+                // 随机添加六花风格的短语
+                if (Math.random() > 0.5) {
+                    const randomPhrase = rikkaPhrases[Math.floor(Math.random() * rikkaPhrases.length)];
+                    response = randomPhrase + " " + response;
+                }
+                
+                return response;
+            }
+            
+            // 生成Lilith风格的回复
+            function generateLilithResponse(response) {
+                const lilithPhrases = [
+                    "By the dark powers...",
+                    "The abyss whispers to me...",
+                    "My dark vision reveals...",
+                    "The forbidden knowledge tells me...",
+                    "In the name of the dark lord...",
+                    "The ancient ones have shown me...",
+                    "The shadows guide my words...",
+                    "My dark powers are stirring..."
+                ];
+                
+                // 随机添加Lilith风格的短语
+                if (Math.random() > 0.5) {
+                    const randomPhrase = lilithPhrases[Math.floor(Math.random() * lilithPhrases.length)];
+                    response = randomPhrase + " " + response;
+                }
+                
+                return response;
+            }
+            
+            // 格式化小说回复
+            function formatNovelResponse(response) {
+                // 添加章节标题格式
+                response = response.replace(/(第[一二三四五六七八九十百千零]+章)/g, '<strong>$1</strong>');
+                
+                // 添加段落分隔
+                response = response.replace(/\n\n/g, '</p><p>');
+                response = '<p>' + response + '</p>';
+                
+                return response;
+            }
+            
+            // 添加消息到聊天区域
+            function addMessageToChat(sender, text, className) {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString();
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${className}`;
+                messageDiv.innerHTML = `
+                    <div class="message-sender">${sender}</div>
+                    <div class="message-content">${text}</div>
+                    <div class="message-time">${timeString}</div>
+                `;
+                
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // 发送按钮点击事件
+            sendBtn.addEventListener('click', sendMessage);
+            
+            // 回车键发送消息
+            userInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // 小说生成功能
+            const generateNovelBtn = document.getElementById('generate-novel-btn');
+            const clearNovelBtn = document.getElementById('clear-novel-btn');
+            const novelPrompt = document.getElementById('novel-prompt');
+            const wordCount = document.getElementById('word-count');
+            const referenceContent = document.getElementById('reference-content');
+            
+            // 生成小说按钮点击事件
+            generateNovelBtn.addEventListener('click', async function() {
+                const prompt = novelPrompt.value.trim();
+                const count = wordCount.value;
+                const reference = referenceContent.value.trim();
+                
+                if (!prompt) {
+                    alert('请输入小说生成提示词');
+                    return;
+                }
+                
+                // 切换到聊天页面
+                loginPage.style.display = 'none';
+                chatPage.style.display = 'flex';
+                
+                // 更新模型信息
+                document.getElementById('model-select').value = 'novel-writer';
+                document.getElementById('model-info').textContent = '当前模型: 小说生成器';
+                document.getElementById('chat-title').textContent = '小说生成器';
+                document.getElementById('character-name').textContent = '小说家';
+                document.getElementById('typing-text').textContent = ' 正在创作中...';
+                
+                // 清空聊天记录
+                document.getElementById('chat-messages').innerHTML = '';
+                chatHistory = [];
+                
+                // 构建小说生成提示
+                let novelPromptText = `请创作一篇小说，主题是：${prompt}。要求大约${count}字。`;
+                
+                if (reference) {
+                    novelPromptText += `\n参考内容：${reference}`;
+                }
+                
+                // 添加到聊天输入框
+                userInput.value = novelPromptText;
+                
+                // 自动发送消息
+                setTimeout(sendMessage, 500);
+            });
+            
+            // 清空小说设置
+            clearNovelBtn.addEventListener('click', function() {
+                novelPrompt.value = '';
+                wordCount.value = '1000';
+                referenceContent.value = '';
+            });
+        });
+    </script>
+</body>
+</html>
