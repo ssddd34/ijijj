@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>哔哩哔哩第三方客户端</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+        }
+        
+        :root {
+            --primary-color: #FB7299;
+            --secondary-color: #00A1D6;
+            --bg-color: #F4F4F4;
+            --card-bg: #FFFFFF;
+            --text-primary: #333333;
+            --text-secondary: #999999;
+            --header-height: 60px;
+            --sidebar-width: 220px;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        /* 顶部导航栏 */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-right: 30px;
+            cursor: pointer;
+        }
+        
+        .logo i {
+            font-size: 32px;
+            color: var(--primary-color);
+            margin-right: 10px;
+        }
+        
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .search-bar {
+            flex: 1;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        .search-bar input {
+            width: 100%;
+            padding: 10px 15px;
+            padding-left: 40px;
+            border: 1px solid #e7e7e7;
+            border-radius: 6px;
+            font-size: 14px;
+            background: #f5f5f5;
+            transition: all 0.3s;
+        }
+        
+        .search-bar input:focus {
+            background: white;
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        
+        .search-bar i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+        
+        .nav-right {
+            display: flex;
+            align-items: center;
+            margin-left: auto;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 20px;
+        }
+        
+        /* 主要内容区域 */
+        .container {
+            display: flex;
+            margin-top: var(--header-height);
+            min-height: calc(100vh - var(--header-height));
+        }
+        
+        /* 侧边导航 */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--card-bg);
+            height: calc(100vh - var(--header-height));
+            position: fixed;
+            left: 0;
+            padding: 20px 0;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .nav-item:hover {
+            background-color: #f9f9f9;
+            color: var(--primary-color);
+        }
+        
+        .nav-item.active {
+            background-color: #f0f7ff;
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+        
+        .nav-item i {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        
+        .nav-divider {
+            height: 1px;
+            background-color: #eee;
+            margin: 15px 0;
+        }
+        
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+        }
+        
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .see-more {
+            color: var(--text-secondary);
+            font-size: 14px;
+            text-decoration: none;
+        }
+        
+        .see-more:hover {
+            color: var(--primary-color);
+        }
+        
+        /* 视频卡片网格 */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .video-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .video-thumb {
+            position: relative;
+            width: 100%;
+            padding-top: 60%; /* 16:9 Aspect Ratio */
+            background-color: #eee;
+            overflow: hidden;
+        }
+        
+        .video-thumb img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .video-duration {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .video-info {
+            padding: 12px;
+        }
+        
+        .video-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 42px;
+        }
+        
+        .video-stats {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+        
+        .video-uploader {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .uploader-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background-color: #ddd;
+        }
+        
+        /* 登录模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            width: 400px;
+            max-width: 90%;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .modal-header h2 {
+            font-size: 24px;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(251, 114, 153, 0.2);
+        }
+        
+        .login-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        
+        .login-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .modal-footer {
+            padding: 15px 20px;
+            text-align: center;
+            border-top: 1px solid #eee;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .modal-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        /* 加载动画 */
+        .loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            width: 100%;
+        }
+        
+        .loader-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 视频播放器模态框 */
+        .video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .video-modal-content {
+            width: 90%;
+            max-width: 900px;
+            background: black;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .video-modal iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+        }
+        
+        .close-video {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 2001;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .video-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .nav-item span {
+                display: none;
+            }
+            
+            .nav-item i {
+                margin-right: 0;
+                font-size: 20px;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+            
+            .search-bar {
+                max-width: 200px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .sidebar {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .logo h1 {
+                display: none;
+            }
+            
+            .search-bar {
+                max-width: 150px;
+            }
+
+            .video-modal iframe {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header>
+        <div class="logo" id="home-btn">
+            <i class="fas fa-play-circle"></i>
+            <h1>哔哩哔哩第三方</h1>
+        </div>
+        
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="search-input" placeholder="搜索视频、UP主或内容">
+        </div>
+        
+        <div class="nav-right">
+            <div class="user-avatar" id="login-btn">
+                <i class="fas fa-user"></i>
+            </div>
+        </div>
+    </header>
+    
+    <!-- 主要内容区域 -->
+    <div class="container">
+        <!-- 侧边导航 -->
+        <div class="sidebar">
+            <a href="#" class="nav-item active" data-category="recommend">
+                <i class="fas fa-home"></i>
+                <span>首页</span>
+            </a>
+            <a href="#" class="nav-item" data-category="popular">
+                <i class="fas fa-fire"></i>
+                <span>热门</span>
+            </a>
+            <a href="#" class="nav-item" data-category="rank">
+                <i class="fas fa-chart-line"></i>
+                <span>排行榜</span>
+            </a>
+            
+            <div class="nav-divider"></div>
+            
+            <a href="#" class="nav-item" data-category="history">
+                <i class="fas fa-history"></i>
+                <span>历史记录</span>
+            </a>
+            <a href="#" class="nav-item" data-category="favorite">
+                <i class="fas fa-star"></i>
+                <span>我的收藏</span>
+            </a>
+            <a href="#" class="nav-item" data-category="watchlater">
+                <i class="fas fa-clock"></i>
+                <span>稍后再看</span>
+            </a>
+            
+            <div class="nav-divider"></div>
+            
+            <a href="#" class="nav-item" data-category="game">
+                <i class="fas fa-gamepad"></i>
+                <span>游戏区</span>
+            </a>
+            <a href="#" class="nav-item" data-category="music">
+                <i class="fas fa-music"></i>
+                <span>音乐区</span>
+            </a>
+            <a href="#" class="nav-item" data-category="movie">
+                <i class="fas fa-film"></i>
+                <span>影视区</span>
+            </a>
+            <a href="#" class="nav-item" data-category="anime">
+                <i class="fas fa-dragon"></i>
+                <span>动漫区</span>
+            </a>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 推荐视频区域 -->
+            <div class="section-title">
+                <h2>推荐视频</h2>
+                <a href="#" class="see-more" id="more-recommend">查看更多 <i class="fas fa-chevron-right"></i></a>
+            </div>
+            
+            <div class="video-grid" id="recommended-videos">
+                <div class="loader">
+                    <div class="loader-spinner"></div>
+                </div>
+            </div>
+            
+            <!-- 热门视频区域 -->
+            <div class="section-title">
+                <h2>热门视频</h2>
+                <a href="#" class="see-more" id="more-popular">查看更多 <i class="fas fa-chevron-right"></i></a>
+            </div>
+            
+            <div class="video-grid" id="popular-videos">
+                <div class="loader">
+                    <div class="loader-spinner"></div>
+                </div>
+            </div>
+            
+            <!-- 游戏区视频 -->
+            <div class="section-title">
+                <h2>游戏区精选</h2>
+                <a href="#" class="see-more" id="more-gaming">查看更多 <i class="fas fa-chevron-right"></i></a>
+            </div>
+            
+            <div class="video-grid" id="gaming-videos">
+                <div class="loader">
+                    <div class="loader-spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 登录模态框 -->
+    <div class="modal" id="login-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>登录哔哩哔哩</h2>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="username">用户名/手机号</label>
+                    <input type="text" id="username" placeholder="请输入用户名或手机号">
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" placeholder="请输入密码">
+                </div>
+                <button class="login-btn" id="submit-login">登录</button>
+            </div>
+            <div class="modal-footer">
+                没有账号？<a href="https://passport.bilibili.com/register" target="_blank">立即注册</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 视频播放器模态框 -->
+    <div class="video-modal" id="video-player-modal">
+        <div class="video-modal-content">
+            <button class="close-video" id="close-video">
+                <i class="fas fa-times"></i>
+            </button>
+            <iframe id="video-player" src="" frameborder="0" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentCategory = 'recommend';
+        let currentPage = {
+            recommend: 1,
+            popular: 1,
+            gaming: 1
+        };
+        let isLoggedIn = false;
+        let userInfo = null;
+
+        // API配置
+        const API_PROXY = 'https://api.bilibili.com';
+        const VIDEO_BASE_URL = 'https://www.bilibili.com/video';
+
+        // 生成视频卡片的函数
+        function generateVideoCard(video, index) {
+            // 格式化观看次数
+            const formatViews = (views) => {
+                if (views >= 10000) {
+                    return (views / 10000).toFixed(1) + '万';
+                }
+                return views;
+            };
+
+            // 格式化时间
+            const formatTime = (timestamp) => {
+                const now = Date.now();
+                const diff = now - timestamp * 1000;
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                
+                if (days === 0) return '今天';
+                if (days === 1) return '昨天';
+                if (days < 7) return `${days}天前`;
+                if (days < 30) return `${Math.floor(days / 7)}周前`;
+                return `${Math.floor(days / 30)}个月前`;
+            };
+
+            // 格式化时长
+            const formatDuration = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            };
+
+            return `
+                <div class="video-card" data-bvid="${video.bvid}">
+                    <div class="video-thumb">
+                        <img src="${video.pic}" alt="${video.title}" onerror="this.src='https://picsum.photos/320/180?random=${index}'">
+                        <div class="video-duration">${formatDuration(video.duration)}</div>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">${video.title}</div>
+                        <div class="video-stats">
+                            <span>${formatViews(video.stat?.view || 0)}观看</span>
+                            <span>${formatTime(video.pubdate || video.ctime)}</span>
+                        </div>
+                        <div class="video-uploader">
+                            <div class="uploader-avatar"></div>
+                            ${video.owner?.name || '未知UP主'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 获取推荐视频
+        async function fetchRecommendedVideos(page = 1) {
+            try {
+                // 使用B站API获取推荐视频
+                const response = await fetch(`${API_PROXY}/x/web-interface/index/top/feed/rcmd?fresh_idx=${page}`);
+                const data = await response.json();
+                
+                if (data.code === 0) {
+                    return data.data.item;
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                console.error('获取推荐视频失败:', error);
+                // 返回模拟数据作为备选
+                return getFallbackVideos();
+            }
+        }
+
+        // 获取热门视频
+        async function fetchPopularVideos(page = 1) {
+            try {
+                const response = await fetch(`${API_PROXY}/x/web-interface/popular?pn=${page}&ps=20`);
+                const data = await response.json();
+                
+                if (data.code === 0) {
+                    return data.data.list;
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                console.error('获取热门视频失败:', error);
+                return getFallbackVideos();
+            }
+        }
+
+        // 获取游戏区视频
+        async function fetchGamingVideos(page = 1) {
+            try {
+                const response = await fetch(`${API_PROXY}/x/web-interface/dynamic/region?ps=20&rid=4`);
+                const data = await response.json();
+                
+                if (data.code === 0) {
+                    return data.data.archives;
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                console.error('获取游戏区视频失败:', error);
+                return getFallbackVideos();
+            }
+        }
+
+        // 搜索视频
+        async function searchVideos(keyword, page = 1) {
+            try {
+                const response = await fetch(`${API_PROXY}/x/web-interface/search/all/v2?keyword=${encodeURIComponent(keyword)}&page=${page}`);
+                const data = await response.json();
+                
+                if (data.code === 0) {
+                    // 过滤出视频结果
+                    const videoResults = data.data.result.find(item => item.result_type === 'video');
+                    return videoResults ? videoResults.data : [];
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                console.error('搜索视频失败:', error);
+                return [];
+            }
+        }
+
+        // 备选视频数据（当API请求失败时使用）
+        function getFallbackVideos() {
+            return [
+                {
+                    title: "【4月新番】间谍过家家 第二部分 官方预告",
+                    pic: "https://picsum.photos/320/180?random=1",
+                    duration: 138,
+                    stat: { view: 862000 },
+                    pubdate: Date.now() / 1000 - 3 * 24 * 60 * 60,
+                    owner: { name: "哔哩哔哩番剧" },
+                    bvid: "BV1fa411r7qP"
+                },
+                {
+                    title: "当不同学科的博士开始吐槽自己的专业",
+                    pic: "https://picsum.photos/320/180?random=2",
+                    duration: 942,
+                    stat: { view: 1245000 },
+                    pubdate: Date.now() / 1000 - 7 * 24 * 60 * 60,
+                    owner: { name: "老师好我叫何同学" },
+                    bvid: "BV1bL4y1Y7Vo"
+                },
+                {
+                    title: "【原神】须弥全域探索攻略（持续更新中）",
+                    pic: "https://picsum.photos/320/180?random=3",
+                    duration: 1695,
+                    stat: { view: 428000 },
+                    pubdate: Date.now() / 1000 - 2 * 24 * 60 * 60,
+                    owner: { name: "原神官方" },
+                    bvid: "BV1qW4y1i7yT"
+                },
+                {
+                    title: "2022英雄联盟全球总决赛小组赛精选",
+                    pic: "https://picsum.photos/320/180?random=4",
+                    duration: 1327,
+                    stat: { view: 2034000 },
+                    pubdate: Date.now() / 1000 - 5 * 24 * 60 * 60,
+                    owner: { name: "英雄联盟赛事" },
+                    bvid: "BV1ZG4y1v7h6"
+                }
+            ];
+        }
+
+        // 加载视频到指定区域
+        async function loadVideosToSection(sectionId, fetchFunction, page = 1) {
+            const section = document.getElementById(sectionId);
+            section.innerHTML = '<div class="loader"><div class="loader-spinner"></div></div>';
+            
+            try {
+                const videos = await fetchFunction(page);
+                if (videos.length > 0) {
+                    section.innerHTML = '';
+                    videos.forEach((video, index) => {
+                        section.innerHTML += generateVideoCard(video, index);
+                    });
+                    
+                    // 添加视频点击事件
+                    document.querySelectorAll(`#${sectionId} .video-card`).forEach(card => {
+                        card.addEventListener('click', function() {
+                            const bvid = this.getAttribute('data-bvid');
+                            playVideo(bvid);
+                        });
+                    });
+                } else {
+                    section.innerHTML = '<div class="no-videos">暂无视频数据</div>';
+                }
+            } catch (error) {
+                section.innerHTML = '<div class="error-message">加载失败，请重试</div>';
+                console.error('加载视频失败:', error);
+            }
+        }
+
+        // 播放视频
+        function playVideo(bvid) {
+            const videoModal = document.getElementById('video-player-modal');
+            const videoPlayer = document.getElementById('video-player');
+            
+            // 使用B站嵌入式播放器
+            videoPlayer.src = `https://player.bilibili.com/player.html?bvid=${bvid}&autoplay=1&page=1`;
+            videoModal.style.display = 'flex';
+            
+            // 阻止背景滚动
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 初始化页面
+        async function initializePage() {
+            // 加载各区域视频
+            await Promise.all([
+                loadVideosToSection('recommended-videos', fetchRecommendedVideos),
+                loadVideosToSection('popular-videos', fetchPopularVideos),
+                loadVideosToSection('gaming-videos', fetchGamingVideos)
+            ]);
+            
+            // 添加事件监听器
+            addEventListeners();
+        }
+
+        // 添加事件监听器
+        function addEventListeners() {
+            const loginBtn = document.getElementById('login-btn');
+            const loginModal = document.getElementById('login-modal');
+            const submitLogin = document.getElementById('submit-login');
+            const closeVideo = document.getElementById('close-video');
+            const videoModal = document.getElementById('video-player-modal');
+            const searchInput = document.getElementById('search-input');
+            const homeBtn = document.getElementById('home-btn');
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            // 登录按钮点击事件
+            loginBtn.addEventListener('click', function() {
+                loginModal.style.display = 'flex';
+            });
+            
+            // 登录提交事件
+            submitLogin.addEventListener('click', function() {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                if (username && password) {
+                    // 模拟登录成功
+                    isLoggedIn = true;
+                    userInfo = { username: username };
+                    alert('登录成功！');
+                    loginModal.style.display = 'none';
+                    loginBtn.innerHTML = username.charAt(0).toUpperCase();
+                } else {
+                    alert('请输入用户名和密码');
+                }
+            });
+            
+            // 点击模态框外部关闭
+            loginModal.addEventListener('click', function(e) {
+                if (e.target === loginModal) {
+                    loginModal.style.display = 'none';
+                }
+            });
+            
+            // 关闭视频播放器
+            closeVideo.addEventListener('click', function() {
+                videoModal.style.display = 'none';
+                const videoPlayer = document.getElementById('video-player');
+                videoPlayer.src = '';
+                document.body.style.overflow = 'auto';
+            });
+            
+            // 视频模态框点击外部关闭
+            videoModal.addEventListener('click', function(e) {
+                if (e.target === videoModal) {
+                    videoModal.style.display = 'none';
+                    const videoPlayer = document.getElementById('video-player');
+                    videoPlayer.src = '';
+                    document.body.style.overflow = 'auto';
+                }
+            });
+            
+            // 搜索功能
+            searchInput.addEventListener('keypress', async function(e) {
+                if (e.key === 'Enter') {
+                    const keyword = this.value.trim();
+                    if (keyword) {
+                        // 清空当前内容
+                        document.querySelectorAll('.video-grid').forEach(section => {
+                            section.innerHTML = '<div class="loader"><div class="loader-spinner"></div></div>';
+                        });
+                        
+                        // 执行搜索
+                        const results = await searchVideos(keyword);
+                        
+                        // 显示搜索结果
+                        document.getElementById('recommended-videos').innerHTML = '';
+                        document.getElementById('popular-videos').innerHTML = '';
+                        document.getElementById('gaming-videos').innerHTML = '';
+                        
+                        document.querySelector('.section-title h2').textContent = `搜索结果: ${keyword}`;
+                        
+                        if (results.length > 0) {
+                            results.forEach((video, index) => {
+                                document.getElementById('recommended-videos').innerHTML += generateVideoCard(video, index);
+                            });
+                            
+                            // 添加视频点击事件
+                            document.querySelectorAll('#recommended-videos .video-card').forEach(card => {
+                                card.addEventListener('click', function() {
+                                    const bvid = this.getAttribute('data-bvid');
+                                    playVideo(bvid);
+                                });
+                            });
+                        } else {
+                            document.getElementById('recommended-videos').innerHTML = '<div class="no-videos">没有找到相关视频</div>';
+                        }
+                    }
+                }
+            });
+            
+            // 首页按钮
+            homeBtn.addEventListener('click', function() {
+                location.reload();
+            });
+            
+            // 导航菜单点击
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // 更新活跃状态
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const category = this.getAttribute('data-category');
+                    currentCategory = category;
+                    
+                    // 根据分类加载内容
+                    if (category === 'recommend') {
+                        loadVideosToSection('recommended-videos', fetchRecommendedVideos);
+                    } else if (category === 'popular') {
+                        loadVideosToSection('popular-videos', fetchPopularVideos);
+                    } else if (category === 'game') {
+                        loadVideosToSection('gaming-videos', fetchGamingVideos);
+                    } else {
+                        // 其他分类暂未实现
+                        alert('该功能暂未实现');
+                    }
+                });
+            });
+            
+            // "查看更多"按钮
+            document.getElementById('more-recommend').addEventListener('click', function(e) {
+                e.preventDefault();
+                currentPage.recommend++;
+                loadVideosToSection('recommended-videos', fetchRecommendedVideos, currentPage.recommend);
+            });
+            
+            document.getElementById('more-popular').addEventListener('click', function(e) {
+                e.preventDefault();
+                currentPage.popular++;
+                loadVideosToSection('popular-videos', fetchPopularVideos, currentPage.popular);
+            });
+            
+            document.getElementById('more-gaming').addEventListener('click', function(e) {
+                e.preventDefault();
+                currentPage.gaming++;
+                loadVideosToSection('gaming-videos', fetchGamingVideos, currentPage.gaming);
+            });
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>
